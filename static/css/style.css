@@ -38,3 +38,16 @@
 .carousel-control-prev, .carousel-control-next {
     width: 15%;
 }
+
+/* Botones de filtros */
+.btn-primary {
+    background-color: #003366 !important;
+    border-color: #003366 !important;
+    color: white !important;
+    width: 100%;
+}
+/* Color cuando el botón está seleccionado */
+.btn-active {
+    background-color: #5588cc !important; /* Azul más claro */
+    border-color: #5588cc !important;
+}

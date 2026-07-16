@@ -35,7 +35,6 @@ app.jinja_env.globals.update(contar_imagenes=contar_imagenes, obtener_ruta_image
 scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
          "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
 
-# Carga de credenciales: Prioriza variable de entorno (Render), luego archivo (Local)
 creds_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
 
 if creds_json:
@@ -53,6 +52,7 @@ def get_data():
     for p in datos:
         nombre = str(p.get('PRODUCTO', '')).strip()
         codigo = str(p.get('CODIGO', '')).strip()
+        # Verificar imágenes para validar producto
         existe_img = os.path.exists(os.path.join('static', '0-imagenes', f"{codigo}.jpg")) or \
                      os.path.exists(os.path.join('static', '0-imagenes', f"{codigo}_1.jpg"))
         if len(nombre) > 2 and codigo != "" and existe_img:
@@ -63,12 +63,12 @@ def get_data():
 def index():
     todos_los_productos = get_data()
     
-    # Obtener filtros de URL
-    cat_filtro = request.args.get('categoria')
-    pub_filtro = request.args.get('publico')
-    ver_filtro = request.args.get('version')
+    # Capturar filtros de URL con valores por defecto vacíos
+    cat_filtro = request.args.get('categoria', '')
+    pub_filtro = request.args.get('publico', '')
+    ver_filtro = request.args.get('version', '')
     
-    # Filtrado
+    # Filtrado lógico
     productos = todos_los_productos
     if cat_filtro:
         productos = [p for p in productos if p['CATEGORIA'] == cat_filtro]
@@ -77,7 +77,7 @@ def index():
     if ver_filtro:
         productos = [p for p in productos if p['VERSION'] == ver_filtro]
         
-    # Listas para filtros (siempre basadas en todos los productos)
+    # Listas para los botones de filtros (únicas y ordenadas)
     categorias = sorted(list(set(p['CATEGORIA'] for p in todos_los_productos if p.get('CATEGORIA'))))
     publicos = sorted(list(set(p['PUBLICO'] for p in todos_los_productos if p.get('PUBLICO'))))
     versiones = sorted(list(set(p['VERSION'] for p in todos_los_productos if p.get('VERSION'))))
@@ -86,7 +86,10 @@ def index():
                            productos=productos, 
                            categorias=categorias, 
                            publicos=publicos, 
-                           versiones=versiones)
+                           versiones=versiones,
+                           categoria_actual=cat_filtro,
+                           publico_actual=pub_filtro,
+                           version_actual=ver_filtro)
 
 if __name__ == '__main__':
     app.run(debug=True)

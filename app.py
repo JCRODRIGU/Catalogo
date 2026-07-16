@@ -3,8 +3,38 @@ import gspread
 import os
 import json
 from oauth2client.service_account import ServiceAccountCredentials
+from urllib.parse import urlencode  # <-- IMPORTANTE: Nueva librería para armar URLs
 
 app = Flask(__name__)
+
+# --- NUEVA FUNCIÓN: CONSTRUCTOR DE URLs PARA FILTROS ---
+def generar_url(tipo, valor, cats, pubs, vers):
+    # Hacemos copias para no modificar las listas originales
+    c = cats.copy()
+    p = pubs.copy()
+    v = vers.copy()
+    
+    # Lógica de "interruptor": si el filtro ya está, lo quitamos; si no está, lo agregamos
+    if tipo == 'categoria':
+        if valor in c: c.remove(valor)
+        else: c.append(valor)
+    elif tipo == 'publico':
+        if valor in p: p.remove(valor)
+        else: p.append(valor)
+    elif tipo == 'version':
+        if valor in v: v.remove(valor)
+        else: v.append(valor)
+        
+    # Armamos los parámetros para la URL
+    params = []
+    for x in c: params.append(('categoria', x))
+    for x in p: params.append(('publico', x))
+    for x in v: params.append(('version', x))
+    
+    if not params:
+        return "/"
+    return "/?" + urlencode(params)
+
 
 # --- FUNCIONES DE IMAGEN ---
 def contar_imagenes(codigo):
@@ -29,7 +59,8 @@ def obtener_ruta_imagen(codigo, indice):
             return f"0-imagenes/{codigo}_1.jpg"
     return f"0-imagenes/{codigo}_{indice}.jpg"
 
-app.jinja_env.globals.update(contar_imagenes=contar_imagenes, obtener_ruta_imagen=obtener_ruta_imagen)
+# Pasamos también generar_url al HTML
+app.jinja_env.globals.update(contar_imagenes=contar_imagenes, obtener_ruta_imagen=obtener_ruta_imagen, generar_url=generar_url)
 
 # --- CONFIGURACIÓN GOOGLE SHEETS ---
 scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',

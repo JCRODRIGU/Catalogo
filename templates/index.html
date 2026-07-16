@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librería Cristiana Logos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Estilos generales */
+        .carousel-item img { height: 250px; object-fit: contain; background: #f8f9fa; }
+        .card-title { min-height: 3em; font-size: 1.1rem; }
+        .card { margin-bottom: 20px; border-radius: 15px; transition: transform 0.2s; }
+        .card:active { transform: scale(0.98); }
+        
+        /* Botón de WhatsApp */
+        .btn-success { background-color: #25d366; border: none; font-weight: bold; }
+        
+        /* Controles carrusel */
+        .carousel-control-prev-icon, .carousel-control-next-icon {
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            padding: 10px;
+        }
+        .carousel-control-prev, .carousel-control-next { width: 15%; }
+        
+        /* Botones de filtros (Azul oscuro uniforme) */
+        .btn-primary {
+            background-color: #003366 !important;
+            border-color: #003366 !important;
+            color: white !important;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-4">
+    <h1 class="text-primary text-center mb-4">Librería Cristiana Logos</h1>
+
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="card p-3 shadow-sm mb-4">
+                <h5 class="text-center mb-3">Filtrar por</h5>
+                
+                <h6 class="mt-2">Categoría</h6>
+                <div class="d-grid gap-2 mb-3">
+                    <a href="/" class="btn btn-primary btn-sm">Todos</a>
+                    {% for cat in categorias %}
+                        <a href="/?categoria={{ cat }}" class="btn btn-primary btn-sm">{{ cat }}</a>
+                    {% endfor %}
+                </div>
+                
+                <hr>
+                <h6>Público</h6>
+                <div class="d-grid gap-2 mb-3">
+                    <a href="/" class="btn btn-primary btn-sm">Todos</a>
+                    {% for pub in publicos %}
+                        <a href="/?publico={{ pub }}" class="btn btn-primary btn-sm">{{ pub }}</a>
+                    {% endfor %}
+                </div>
+                
+                <hr>
+                <h6>Versión</h6>
+                <div class="d-grid gap-2">
+                    <a href="/" class="btn btn-primary btn-sm">Todas</a>
+                    {% for ver in versiones %}
+                        <a href="/?version={{ ver }}" class="btn btn-primary btn-sm">{{ ver }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="mb-4">
+                <input type="text" id="buscador" class="form-control form-control-lg shadow-sm" 
+                       placeholder="🔍 Buscar libro por nombre..." 
+                       onkeyup="filtrarProductos()">
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="contenedor-productos">
+                {% for p in productos %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div id="carousel-{{ p.CODIGO }}" class="carousel slide" data-bs-ride="false">
+                            <div class="carousel-inner">
+                                {% for i in range(1, contar_imagenes(p.CODIGO) + 1) %}
+                                <div class="carousel-item {% if i == 1 %}active{% endif %}">
+                                    <img src="{{ url_for('static', filename=obtener_ruta_imagen(p.CODIGO, i)) }}" class="d-block w-100" alt="Producto">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if contar_imagenes(p.CODIGO) > 1 %}
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carousel-{{ p.CODIGO }}" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carousel-{{ p.CODIGO }}" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ p.PRODUCTO }}</h5>
+                            <p class="card-text">
+                                <strong>Precio:</strong> ${{ p.PRECIO }}<br>
+                                <strong>Categoría:</strong> {{ p.CATEGORIA }}<br>
+                                <strong>Público:</strong> {{ p.PUBLICO }}<br>
+                                <strong>Versión:</strong> {{ p.VERSION }}
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <button class="btn btn-primary w-100" onclick="agregarAlCarrito('{{ p.PRODUCTO }}', {{ p.PRECIO }})">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed-bottom p-3 text-center" style="z-index: 1000;">
+    <button class="btn btn-success btn-lg shadow" data-bs-toggle="modal" data-bs-target="#modalCarrito">
+        🛒 Ver Pedido (<span id="contador-carrito">0</span>)
+    </button>
+</div>
+
+<div class="modal fade" id="modalCarrito" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tu Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="lista-carrito" class="list-group mb-3"></ul>
+                <div class="mb-3">
+                    <input type="text" id="nombreCliente" class="form-control" placeholder="Tu Nombre">
+                </div>
+                <h6 class="text-end">Total: $<span id="total-carrito">0</span></h6>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary w-100" onclick="enviarPedido()">Finalizar por WhatsApp</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    let temporizadorBusqueda;
+
+    function filtrarProductos() {
+        clearTimeout(temporizadorBusqueda);
+        temporizadorBusqueda = setTimeout(() => {
+            const input = document.getElementById('buscador').value.toLowerCase();
+            const tarjetas = document.querySelectorAll('.col'); 
+            
+            tarjetas.forEach(tarjeta => {
+                const titulo = tarjeta.querySelector('.card-title').innerText.toLowerCase();
+                tarjeta.style.display = titulo.includes(input) ? "" : "none";
+            });
+        }, 200);
+    }
+
+    function agregarAlCarrito(producto, precio) {
+        carrito.push({producto, precio});
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+        actualizarContador();
+        alert(producto + " agregado al carrito");
+    }
+
+    function actualizarContador() {
+        const contador = document.getElementById('contador-carrito');
+        const lista = document.getElementById('lista-carrito');
+        const totalElemento = document.getElementById('total-carrito');
+        
+        if (contador) contador.innerText = carrito.length;
+        if (lista) {
+            lista.innerHTML = '';
+            let total = 0;
+            carrito.forEach((item, index) => {
+                total += item.precio;
+                lista.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between">
+                        ${item.producto} - $${item.precio}
+                        <button class="btn btn-sm btn-danger" onclick="eliminarDelCarrito(${index})">X</button>
+                    </li>`;
+            });
+            if (totalElemento) totalElemento.innerText = total;
+        }
+    }
+
+    function eliminarDelCarrito(index) {
+        carrito.splice(index, 1);
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+        actualizarContador();
+    }
+
+    function enviarPedido() {
+        const nombre = document.getElementById('nombreCliente').value;
+        if (!nombre) { alert("Por favor ingresa tu nombre"); return; }
+        
+        let texto = `¡Hola! Soy ${nombre} y quiero hacer un pedido:%0A`;
+        let total = 0;
+        carrito.forEach(item => {
+            texto += `- ${item.producto}: $${item.precio}%0A`;
+            total += item.precio;
+        });
+        texto += `%0ATotal: $${total}`;
+        window.location.href = "https://wa.me/573125756581?text=" + texto;
+    }
+
+    actualizarContador();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+/* Que las tarjetas tengan un mejor aspecto en móvil */
+.card {
+    margin-bottom: 20px;
+    border-radius: 15px; 
+    transition: transform 0.2s;
+}
+
+/* Efecto al tocar con el dedo */
+.card:active {
+    transform: scale(0.98); 
+}
+
+/* Ajuste del botón de WhatsApp */
+.btn-success {
+    background-color: #25d366; 
+    border: none;
+    font-weight: bold;
+}
+
+/* Estilo para las imágenes del carrusel */
+.carousel-item img { 
+    height: 250px; 
+    object-fit: contain; 
+    background: #f8f9fa; 
+}
+.card-title { 
+    min-height: 3em; 
+    font-size: 1.1rem; 
+}
+
+/* Asegura que los controles del carrusel sean visibles */
+.carousel-control-prev-icon, 
+.carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    padding: 10px;
+}
+.carousel-control-prev, .carousel-control-next {
+    width: 15%;
+}

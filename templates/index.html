@@ -11,26 +11,10 @@
         .card { margin-bottom: 20px; border-radius: 15px; transition: transform 0.2s; }
         .card:active { transform: scale(0.98); }
         .btn-success { background-color: #25d366; border: none; font-weight: bold; }
-        .carousel-control-prev-icon, .carousel-control-next-icon {
-            background-color: rgba(0, 0, 0, 0.5);
-            border-radius: 50%;
-            padding: 10px;
-        }
+        .carousel-control-prev-icon, .carousel-control-next-icon { background-color: rgba(0, 0, 0, 0.5); border-radius: 50%; padding: 10px; }
         .carousel-control-prev, .carousel-control-next { width: 15%; }
-        
-        /* Estilos de botones */
-        .btn-primary {
-            background-color: #003366 !important;
-            border-color: #003366 !important;
-            color: white !important;
-            width: 100%;
-        }
-        /* Color cuando el botón está seleccionado */
-        .btn-active {
-            background-color: #5588cc !important; 
-            border-color: #5588cc !important;
-            font-weight: bold;
-        }
+        .btn-primary { background-color: #003366 !important; border-color: #003366 !important; color: white !important; width: 100%; }
+        .btn-active { background-color: #5588cc !important; border-color: #5588cc !important; font-weight: bold; }
     </style>
 </head>
 <body class="bg-light">
@@ -42,33 +26,38 @@
         <div class="col-lg-3">
             <div class="card p-3 shadow-sm mb-4">
                 <h5 class="text-center mb-3">Filtrar por</h5>
-                
-                <!-- Botón Limpiar -->
                 <div class="d-grid mb-3">
                     <a href="/" class="btn btn-outline-secondary btn-sm">❌ Limpiar todos los filtros</a>
                 </div>
                 <hr>
                 
-                <h6 class="mt-2">Categoría</h6>
+                <h6>Categoría</h6>
                 <div class="d-grid gap-2 mb-3">
                     {% for cat in categorias %}
-                        <a href="/?categoria={{ cat }}" class="btn btn-primary btn-sm {% if cat == categoria_actual %}btn-active{% endif %}">{{ cat }}</a>
+                        {% set url = "/?" %}{% for c in (cat_activos + [cat] if cat not in cat_activos else cat_activos|reject("equalto", cat)) %}{% set url = url + "categoria=" + c + "&" %}{% endfor %}
+                        {% for p in pub_activos %}{% set url = url + "publico=" + p + "&" %}{% endfor %}
+                        {% for v in ver_activos %}{% set url = url + "version=" + v + "&" %}{% endfor %}
+                        <a href="{{ url }}" class="btn btn-primary btn-sm {% if cat in cat_activos %}btn-active{% endif %}">{{ cat }}</a>
                     {% endfor %}
                 </div>
-                
                 <hr>
                 <h6>Público</h6>
                 <div class="d-grid gap-2 mb-3">
                     {% for pub in publicos %}
-                        <a href="/?publico={{ pub }}" class="btn btn-primary btn-sm {% if pub == publico_actual %}btn-active{% endif %}">{{ pub }}</a>
+                        {% set url = "/?" %}{% for c in cat_activos %}{% set url = url + "categoria=" + c + "&" %}{% endfor %}
+                        {% for p in (pub_activos + [pub] if pub not in pub_activos else pub_activos|reject("equalto", pub)) %}{% set url = url + "publico=" + p + "&" %}{% endfor %}
+                        {% for v in ver_activos %}{% set url = url + "version=" + v + "&" %}{% endfor %}
+                        <a href="{{ url }}" class="btn btn-primary btn-sm {% if pub in pub_activos %}btn-active{% endif %}">{{ pub }}</a>
                     {% endfor %}
                 </div>
-                
                 <hr>
                 <h6>Versión</h6>
                 <div class="d-grid gap-2">
                     {% for ver in versiones %}
-                        <a href="/?version={{ ver }}" class="btn btn-primary btn-sm {% if ver == version_actual %}btn-active{% endif %}">{{ ver }}</a>
+                        {% set url = "/?" %}{% for c in cat_activos %}{% set url = url + "categoria=" + c + "&" %}{% endfor %}
+                        {% for p in pub_activos %}{% set url = url + "publico=" + p + "&" %}{% endfor %}
+                        {% for v in (ver_activos + [ver] if ver not in ver_activos else ver_activos|reject("equalto", ver)) %}{% set url = url + "version=" + v + "&" %}{% endfor %}
+                        <a href="{{ url }}" class="btn btn-primary btn-sm {% if ver in ver_activos %}btn-active{% endif %}">{{ ver }}</a>
                     {% endfor %}
                 </div>
             </div>
@@ -76,11 +65,8 @@
 
         <div class="col-lg-9">
             <div class="mb-4">
-                <input type="text" id="buscador" class="form-control form-control-lg shadow-sm" 
-                       placeholder="🔍 Buscar libro por nombre..." 
-                       onkeyup="filtrarProductos()">
+                <input type="text" id="buscador" class="form-control form-control-lg shadow-sm" placeholder="🔍 Buscar libro por nombre..." onkeyup="filtrarProductos()">
             </div>
-
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="contenedor-productos">
                 {% for p in productos %}
                 <div class="col">
@@ -94,12 +80,8 @@
                                 {% endfor %}
                             </div>
                             {% if contar_imagenes(p.CODIGO) > 1 %}
-                            <button class="carousel-control-prev" type="button" data-bs-target="#carousel-{{ p.CODIGO }}" data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#carousel-{{ p.CODIGO }}" data-bs-slide="next">
-                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            </button>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carousel-{{ p.CODIGO }}" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carousel-{{ p.CODIGO }}" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
                             {% endif %}
                         </div>
                         <div class="card-body">
@@ -112,9 +94,7 @@
                             </p>
                         </div>
                         <div class="card-footer bg-white border-0">
-                            <button class="btn btn-primary w-100" onclick="agregarAlCarrito('{{ p.PRODUCTO }}', {{ p.PRECIO }})">
-                                Agregar al Carrito
-                            </button>
+                            <button class="btn btn-primary w-100" onclick="agregarAlCarrito('{{ p.PRODUCTO }}', {{ p.PRECIO }})">Agregar al Carrito</button>
                         </div>
                     </div>
                 </div>
@@ -124,32 +104,14 @@
     </div>
 </div>
 
-<!-- Modal y scripts igual que antes -->
-<div class="fixed-bottom p-3 text-center" style="z-index: 1000;">
-    <button class="btn btn-success btn-lg shadow" data-bs-toggle="modal" data-bs-target="#modalCarrito">
-        🛒 Ver Pedido (<span id="contador-carrito">0</span>)
-    </button>
-</div>
-
+<!-- Modal y Scripts -->
+<div class="fixed-bottom p-3 text-center" style="z-index: 1000;"><button class="btn btn-success btn-lg shadow" data-bs-toggle="modal" data-bs-target="#modalCarrito">🛒 Ver Pedido (<span id="contador-carrito">0</span>)</button></div>
 <div class="modal fade" id="modalCarrito" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Tu Pedido</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <ul id="lista-carrito" class="list-group mb-3"></ul>
-                <div class="mb-3">
-                    <input type="text" id="nombreCliente" class="form-control" placeholder="Tu Nombre">
-                </div>
-                <h6 class="text-end">Total: $<span id="total-carrito">0</span></h6>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary w-100" onclick="enviarPedido()">Finalizar por WhatsApp</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Tu Pedido</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body"><ul id="lista-carrito" class="list-group mb-3"></ul><div class="mb-3"><input type="text" id="nombreCliente" class="form-control" placeholder="Tu Nombre"></div><h6 class="text-end">Total: $<span id="total-carrito">0</span></h6></div>
+        <div class="modal-footer"><button class="btn btn-primary w-100" onclick="enviarPedido()">Finalizar por WhatsApp</button></div>
+    </div></div>
 </div>
 
 <script>
@@ -161,53 +123,28 @@
             tarjeta.style.display = titulo.includes(input) ? "" : "none";
         });
     }
-
-    function agregarAlCarrito(producto, precio) {
-        carrito.push({producto, precio});
-        localStorage.setItem('carrito', JSON.stringify(carrito));
-        actualizarContador();
-        alert(producto + " agregado al carrito");
-    }
-
+    function agregarAlCarrito(producto, precio) { carrito.push({producto, precio}); localStorage.setItem('carrito', JSON.stringify(carrito)); actualizarContador(); alert(producto + " agregado al carrito"); }
     function actualizarContador() {
         const contador = document.getElementById('contador-carrito');
         const lista = document.getElementById('lista-carrito');
         const totalElemento = document.getElementById('total-carrito');
         if (contador) contador.innerText = carrito.length;
         if (lista) {
-            lista.innerHTML = '';
-            let total = 0;
-            carrito.forEach((item, index) => {
-                total += item.precio;
-                lista.innerHTML += `<li class="list-group-item d-flex justify-content-between">${item.producto} - $${item.precio}<button class="btn btn-sm btn-danger" onclick="eliminarDelCarrito(${index})">X</button></li>`;
-            });
+            lista.innerHTML = ''; let total = 0;
+            carrito.forEach((item, index) => { total += item.precio; lista.innerHTML += `<li class="list-group-item d-flex justify-content-between">${item.producto} - $${item.precio}<button class="btn btn-sm btn-danger" onclick="eliminarDelCarrito(${index})">X</button></li>`; });
             if (totalElemento) totalElemento.innerText = total;
         }
     }
-
-    function eliminarDelCarrito(index) {
-        carrito.splice(index, 1);
-        localStorage.setItem('carrito', JSON.stringify(carrito));
-        actualizarContador();
-    }
-
+    function eliminarDelCarrito(index) { carrito.splice(index, 1); localStorage.setItem('carrito', JSON.stringify(carrito)); actualizarContador(); }
     function enviarPedido() {
         const nombre = document.getElementById('nombreCliente').value;
-        if (!nombre) { alert("Por favor ingresa tu nombre"); return; }
-        let texto = `¡Hola! Soy ${nombre} y quiero hacer un pedido:%0A`;
-        let total = 0;
-        carrito.forEach(item => { texto += `- ${item.producto}: $${item.precio}%0A`; total += item.precio; });
-        texto += `%0ATotal: $${total}`;
-        window.location.href = "https://wa.me/573125756581?text=" + texto;
+        if (!nombre) { alert("Ingresa tu nombre"); return; }
+        let texto = `¡Hola! Soy ${nombre} y quiero este pedido:%0A`;
+        let total = 0; carrito.forEach(item => { texto += `- ${item.producto}: $${item.precio}%0A`; total += item.precio; });
+        texto += `%0ATotal: $${total}`; window.location.href = "https://wa.me/573125756581?text=" + texto;
     }
-
     actualizarContador();
-
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll('.carousel').forEach(function(el) {
-            new bootstrap.Carousel(el, { interval: 3000, ride: 'carousel' });
-        });
-    });
+    document.addEventListener("DOMContentLoaded", function() { document.querySelectorAll('.carousel').forEach(el => new bootstrap.Carousel(el, { interval: 3000, ride: 'carousel' })); });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -63,33 +63,25 @@ def get_data():
 def index():
     todos_los_productos = get_data()
     
-    # Capturar filtros de URL con valores por defecto vacíos
-    cat_filtro = request.args.get('categoria', '')
-    pub_filtro = request.args.get('publico', '')
-    ver_filtro = request.args.get('version', '')
+    # Capturamos como listas usando .getlist
+    cats = request.args.getlist('categoria')
+    pubs = request.args.getlist('publico')
+    vers = request.args.getlist('version')
     
-    # Filtrado lógico
+    # Filtrado acumulativo
     productos = todos_los_productos
-    if cat_filtro:
-        productos = [p for p in productos if p['CATEGORIA'] == cat_filtro]
-    if pub_filtro:
-        productos = [p for p in productos if p['PUBLICO'] == pub_filtro]
-    if ver_filtro:
-        productos = [p for p in productos if p['VERSION'] == ver_filtro]
+    if cats: productos = [p for p in productos if p['CATEGORIA'] in cats]
+    if pubs: productos = [p for p in productos if p['PUBLICO'] in pubs]
+    if vers: productos = [p for p in productos if p['VERSION'] in vers]
         
-    # Listas para los botones de filtros (únicas y ordenadas)
     categorias = sorted(list(set(p['CATEGORIA'] for p in todos_los_productos if p.get('CATEGORIA'))))
     publicos = sorted(list(set(p['PUBLICO'] for p in todos_los_productos if p.get('PUBLICO'))))
     versiones = sorted(list(set(p['VERSION'] for p in todos_los_productos if p.get('VERSION'))))
     
     return render_template('index.html', 
                            productos=productos, 
-                           categorias=categorias, 
-                           publicos=publicos, 
-                           versiones=versiones,
-                           categoria_actual=cat_filtro,
-                           publico_actual=pub_filtro,
-                           version_actual=ver_filtro)
-
+                           categorias=categorias, publicos=publicos, versiones=versiones,
+                           cat_activos=cats, pub_activos=pubs, ver_activos=vers)
+    
 if __name__ == '__main__':
     app.run(debug=True)

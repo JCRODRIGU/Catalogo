@@ -30,7 +30,7 @@
                 <button class="btn btn-danger btn-sm mb-3 w-100" onclick="limpiarFiltros()">Limpiar Filtros</button>
                 <div id="filtros-box"></div>
                 <hr>
-                <h6>Precio Máx: $<span id="precio-label">250,000</span></h6>
+                <h6>Precio Máx: $<span id="precio-label">300,000</span></h6>
                 <input type="range" id="precio-slider" class="form-range" min="0" max="300000" step="10000" value="300000">
             </div>
         </div>
@@ -44,11 +44,11 @@
 <script>
     let productos = [];
     let activos = new Set();
+    
+    // Lista ajustada a los datos reales de tu hoja
     const ordenCategorias = [
-        "Biblias", "Libros", "Regalos", 
-        "Presentacion Hombre", "Presentacion Mujer", 
-        "NTV", "Reina Valera 1960", "NVI", 
-        "Lenguaje Actual", "Mensaje"
+        "Biblia", "Diccionario", "Hombre", "Mujer", 
+        "NTV", "Reina Valera 1960", "NVI", "Lenguaje Actual", "Mensaje"
     ];
 
     fetch('productos.json').then(r => r.json()).then(data => {
@@ -79,6 +79,8 @@
         activos.clear();
         document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('btn-active'));
         document.getElementById('buscador').value = '';
+        document.getElementById('precio-slider').value = 300000;
+        document.getElementById('precio-label').innerText = '300,000';
         renderizar();
     }
 
@@ -93,7 +95,6 @@
         const maxP = parseInt(document.getElementById('precio-slider').value);
         
         const filtrados = productos.filter(p => {
-            // Buscamos en varias columnas a la vez
             const campos = [
                 String(p.CATEGORIA), String(p.VERSION), String(p.TIPO), 
                 String(p.TAPA), String(p.COLOR)
@@ -109,7 +110,6 @@
                                String(p.PRODUCTO).toLowerCase().includes(busqueda) || 
                                String(p.DESCRIPCION).toLowerCase().includes(busqueda);
             
-            // Limpiamos el precio de signos "$" o puntos antes de comparar
             const precioLimpio = parseInt(String(p.PRECIO).replace(/[^0-9]/g, '')) || 0;
             const cumplePrecio = precioLimpio <= maxP;
             
@@ -122,7 +122,7 @@
                     <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '')).toLocaleString()}</p>
+                        <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
                         <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" 
                            target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
                     </div>

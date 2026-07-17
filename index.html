@@ -73,9 +73,16 @@
 
     async function configurarSlider(codigo) {
         const container = document.getElementById(`slider-${codigo}`);
-        const variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg'];
-        const existentes = [];
+        // Lista exhaustiva de formatos posibles
+        const variantes = [
+            codigo + '.jpg', 
+            codigo + '_1.jpg', 
+            codigo + '_2.jpg', 
+            codigo + '(1).jpg', 
+            codigo + '(2).jpg'
+        ];
         
+        const existentes = [];
         for (let url of variantes) {
             try {
                 const res = await fetch(url, {method: 'HEAD'});
@@ -83,12 +90,15 @@
             } catch(e) {}
         }
 
-        if (existentes.length === 0) {
+        // Usamos Set para quitar duplicados por si acaso
+        const unicos = [...new Set(existentes)];
+
+        if (unicos.length === 0) {
             document.getElementById(`col-${codigo}`).classList.add('hidden-product');
         } else {
             const wrapper = document.createElement('div');
             wrapper.className = 'slider-wrapper';
-            existentes.forEach(src => {
+            unicos.forEach(src => {
                 let img = document.createElement('img');
                 img.src = src;
                 wrapper.appendChild(img);
@@ -96,10 +106,10 @@
             container.innerHTML = '';
             container.appendChild(wrapper);
 
-            if (existentes.length > 1) {
+            if (unicos.length > 1) {
                 let index = 0;
                 setInterval(() => {
-                    index = (index + 1) % existentes.length;
+                    index = (index + 1) % unicos.length;
                     wrapper.style.transform = `translateX(-${index * 100}%)`;
                 }, 3000);
             }
@@ -109,7 +119,11 @@
     function renderizar() {
         const busqueda = document.getElementById('buscador').value.toLowerCase();
         const maxP = document.getElementById('precio-slider').value;
-        const filtrados = productos.filter(p => (activos.categoria.size === 0 || activos.categoria.has(p.CATEGORIA)) && (busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda)) && (p.PRECIO <= maxP));
+        const filtrados = productos.filter(p => 
+            (activos.categoria.size === 0 || activos.categoria.has(p.CATEGORIA)) && 
+            (busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda)) && 
+            (p.PRECIO <= maxP)
+        );
 
         document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
             <div class="col" id="col-${p.CODIGO}">
@@ -126,6 +140,7 @@
                 </div>
             </div>
         `).join('');
+        
         filtrados.forEach(p => configurarSlider(p.CODIGO));
     }
 </script>

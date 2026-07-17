@@ -58,15 +58,14 @@
                 <hr>
                 <h6>Precio</h6>
                 <form action="/" method="GET" class="px-1">
-                    <!-- Mantener filtros previos activos -->
                     {% for c in cat_activos %}<input type="hidden" name="categoria" value="{{c}}">{% endfor %}
                     {% for p in pub_activos %}<input type="hidden" name="publico" value="{{p}}">{% endfor %}
                     {% for v in ver_activos %}<input type="hidden" name="version" value="{{v}}">{% endfor %}
                     
-                    <label class="small text-muted">Min: ${{p_min_actual|int}}</label>
+                    <label class="small text-muted" id="label-min">Min: ${{p_min_actual|int}}</label>
                     <input type="range" class="form-range" name="precio_min" min="{{min_g}}" max="{{max_g}}" value="{{p_min_actual}}">
                     
-                    <label class="small text-muted">Max: ${{p_max_actual|int}}</label>
+                    <label class="small text-muted" id="label-max">Max: ${{p_max_actual|int}}</label>
                     <input type="range" class="form-range" name="precio_max" min="{{min_g}}" max="{{max_g}}" value="{{p_max_actual}}">
                     
                     <button type="submit" class="btn btn-primary btn-sm mt-2">Aplicar Rango</button>
@@ -120,6 +119,14 @@
 </div>
 
 <script>
+    // Script para actualizar labels de precio en tiempo real
+    document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', function() {
+            const label = this.previousElementSibling;
+            label.innerText = (this.name === 'precio_min' ? 'Min: $' : 'Max: $') + parseInt(this.value).toLocaleString();
+        });
+    });
+
     let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
     function filtrarProductos() {
         const input = document.getElementById('buscador').value.toLowerCase();
@@ -137,7 +144,7 @@
         if (lista) {
             lista.innerHTML = ''; let total = 0;
             carrito.forEach((item, index) => { total += item.precio; lista.innerHTML += `<li class="list-group-item d-flex justify-content-between">${item.producto} - $${item.precio}<button class="btn btn-sm btn-danger" onclick="eliminarDelCarrito(${index})">X</button></li>`; });
-            if (totalElemento) totalElemento.innerText = total;
+            if (totalElemento) totalElemento.innerText = total.toLocaleString();
         }
     }
     function eliminarDelCarrito(index) { carrito.splice(index, 1); localStorage.setItem('carrito', JSON.stringify(carrito)); actualizarContador(); }

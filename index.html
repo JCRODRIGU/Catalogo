@@ -9,17 +9,25 @@
         .btn-primary { background-color: #003366 !important; border: none; }
         .btn-active { background-color: #5588cc !important; outline: 3px solid #ffcc00; }
         .card { border-radius: 15px; transition: 0.3s; }
+        
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
         .slider-wrapper { display: flex; transition: transform 0.8s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
+        
         #filtros-box { display: flex; flex-wrap: wrap; gap: 8px; }
         .hidden-product { display: none !important; }
+        #btn-carrito { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
     </style>
 </head>
 <body class="bg-light">
 
 <div class="container py-4">
     <h1 class="text-primary text-center mb-4">Librería Cristiana Logos</h1>
+    
+    <button id="btn-carrito" class="btn btn-success btn-lg shadow" onclick="finalizarPedido()">
+        🛒 Pedido (<span id="carrito-count">0</span>)
+    </button>
+
     <div class="row">
         <div class="col-lg-3">
             <div class="card p-3 mb-4">
@@ -40,6 +48,7 @@
 <script>
     let productos = [];
     let activos = { categoria: new Set() };
+    let carrito = [];
 
     fetch('productos.json').then(r => r.json()).then(data => {
         productos = data;
@@ -68,40 +77,24 @@
         renderizar();
     };
 
-    function renderizar() {
-        const busqueda = document.getElementById('buscador').value.toLowerCase();
-        const maxP = document.getElementById('precio-slider').value;
-        
-        const filtrados = productos.filter(p => {
-            return (activos.categoria.size === 0 || activos.categoria.has(p.CATEGORIA)) &&
-                   (busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda)) &&
-                   (p.PRECIO <= maxP);
-        });
+    function agregarAlCarrito(nombre, precio) {
+        carrito.push({ nombre, precio });
+        document.getElementById('carrito-count').innerText = carrito.length;
+        alert(nombre + ' agregado al pedido');
+    }
 
-        const grid = document.getElementById('grid-productos');
-        grid.innerHTML = filtrados.map(p => `
-            <div class="col" id="col-${p.CODIGO}">
-                <div class="card h-100 shadow-sm">
-                    <div class="img-container" id="slider-${p.CODIGO}">
-                        <img src="${p.CODIGO}.jpg" style="width:100%; height:100%; object-fit:contain; padding:10px;" alt="${p.PRODUCTO}">
-                    </div>
-                    <div class="card-body">
-                        <h6 class="card-title">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        // Una vez renderizados, procesamos las imágenes
-        filtrados.forEach(p => configurarSlider(p.CODIGO));
+    function finalizarPedido() {
+        if (carrito.length === 0) return alert("Tu carrito está vacío");
+        let mensaje = "Hola, me gustaría comprar:%0A";
+        carrito.forEach(p => mensaje += `- ${p.nombre} ($${p.precio.toLocaleString()})%0A`);
+        window.open(`https://wa.me/573125756581?text=${mensaje}`, '_blank');
     }
 
     async function configurarSlider(codigo) {
         const container = document.getElementById(`slider-${codigo}`);
         const variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg'];
-        
         const existentes = [];
+        
         for (let url of variantes) {
             try {
                 const res = await fetch(url, {method: 'HEAD'});
@@ -130,6 +123,29 @@
                 }, 3000);
             }
         }
+    }
+
+    function renderizar() {
+        const busqueda = document.getElementById('buscador').value.toLowerCase();
+        const maxP = document.getElementById('precio-slider').value;
+        const filtrados = productos.filter(p => (activos.categoria.size === 0 || activos.categoria.has(p.CATEGORIA)) && (busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda)) && (p.PRECIO <= maxP));
+
+        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
+            <div class="col" id="col-${p.CODIGO}">
+                <div class="card h-100 shadow-sm">
+                    <div class="img-container" id="slider-${p.CODIGO}"></div>
+                    <div class="card-body text-center">
+                        <h6 class="card-title">${p.PRODUCTO}</h6>
+                        <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-sm" onclick="agregarAlCarrito('${p.PRODUCTO}', ${p.PRECIO})">🛒 Agregar al Pedido</button>
+                            <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa%20el%20libro:%20${encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn btn-success btn-sm">💬 Consultar por WhatsApp</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        filtrados.forEach(p => configurarSlider(p.CODIGO));
     }
 </script>
 </body>

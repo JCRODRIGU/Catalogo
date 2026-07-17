@@ -9,11 +9,9 @@
         .btn-cat { background-color: #003366 !important; color: white !important; border: none; width: 100%; text-align: left; margin-bottom: 5px; }
         .btn-active { background-color: #5588cc !important; color: white !important; }
         .card { border-radius: 15px; transition: 0.3s; }
-        
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
         .slider-wrapper { display: flex; transition: transform 0.8s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
-        
         #filtros-box { display: flex; flex-direction: column; }
         .hidden-product { display: none !important; }
     </style>
@@ -22,7 +20,6 @@
 
 <div class="container py-4">
     <h1 class="text-primary text-center mb-4">Librería Cristiana Logos</h1>
-    
     <div class="row">
         <div class="col-lg-3">
             <div class="card p-3 mb-4">
@@ -45,9 +42,17 @@
     let productos = [];
     let activos = new Set();
     
-    const ordenCategorias = [
-        "Biblia", "Diccionario", "Hombre", "Mujer", 
-        "NTV", "Reina Valera 1960", "NVI", "Lenguaje Actual", "Mensaje"
+    // Mapeo preciso: qué botón busca en qué columna del JSON
+    const filtrosConfig = [
+        { etiqueta: "Biblia", campo: "CATEGORIA" },
+        { etiqueta: "Diccionario", campo: "CATEGORIA" },
+        { etiqueta: "Hombre", campo: "TIPO" },
+        { etiqueta: "Mujer", campo: "TIPO" },
+        { etiqueta: "NTV", campo: "VERSION" },
+        { etiqueta: "Reina Valera 1960", campo: "VERSION" },
+        { etiqueta: "NVI", campo: "VERSION" },
+        { etiqueta: "Lenguaje Actual", campo: "VERSION" },
+        { etiqueta: "Mensaje", campo: "VERSION" }
     ];
 
     fetch('productos.json').then(r => r.json()).then(data => {
@@ -58,8 +63,8 @@
 
     function inicializarFiltros() {
         const container = document.getElementById('filtros-box');
-        container.innerHTML = ordenCategorias.map(c => 
-            `<button class="btn btn-cat btn-sm" onclick="toggleFiltro('${c}', this)">${c}</button>`
+        container.innerHTML = filtrosConfig.map(f => 
+            `<button class="btn btn-cat btn-sm" onclick="toggleFiltro('${f.etiqueta}', this)">${f.etiqueta}</button>`
         ).join('');
     }
 
@@ -78,8 +83,6 @@
         activos.clear();
         document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('btn-active'));
         document.getElementById('buscador').value = '';
-        document.getElementById('precio-slider').value = 300000;
-        document.getElementById('precio-label').innerText = '300,000';
         renderizar();
     }
 
@@ -94,21 +97,20 @@
         const maxP = parseInt(document.getElementById('precio-slider').value);
         
         const filtrados = productos.filter(p => {
-            const categoria = String(p.CATEGORIA).trim().toLowerCase();
-            const tipo = String(p.TIPO).trim().toLowerCase();
-            const version = String(p.VERSION).trim().toLowerCase();
-            const activasArray = Array.from(activos).map(c => c.trim().toLowerCase());
+            const activasArray = Array.from(activos);
             
-            // Lógica estricta: el producto debe coincidir con los filtros seleccionados
-            const cumpleCat = activos.size === 0 || activasArray.every(a => 
-                categoria.includes(a) || tipo.includes(a) || version.includes(a)
-            );
+            // Filtro estricto: el producto debe coincidir en la columna específica de cada botón
+            const cumpleCat = activos.size === 0 || activasArray.every(etiqueta => {
+                const config = filtrosConfig.find(f => f.etiqueta === etiqueta);
+                const valorProducto = String(p[config.campo] || "").trim().toLowerCase();
+                return valorProducto.includes(etiqueta.toLowerCase());
+            });
             
             const cumpleBusq = busqueda === '' || 
-                               String(p.PRODUCTO).toLowerCase().includes(busqueda) || 
-                               String(p.DESCRIPCION).toLowerCase().includes(busqueda);
+                               String(p.PRODUCTO || "").toLowerCase().includes(busqueda) || 
+                               String(p.DESCRIPCION || "").toLowerCase().includes(busqueda);
             
-            const precioLimpio = parseInt(String(p.PRECIO).replace(/[^0-9]/g, '')) || 0;
+            const precioLimpio = parseInt(String(p.PRECIO || "0").replace(/[^0-9]/g, '')) || 0;
             const cumplePrecio = precioLimpio <= maxP;
             
             return cumpleCat && cumpleBusq && cumplePrecio;

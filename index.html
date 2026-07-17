@@ -12,6 +12,8 @@
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; }
         .card-img-top { max-height: 100%; width: auto; object-fit: contain; padding: 10px; }
         #filtros-box { display: flex; flex-wrap: wrap; gap: 8px; }
+        /* Oculta productos que fallaron al cargar imágenes */
+        .hidden-product { display: none !important; }
     </style>
 </head>
 <body class="bg-light">
@@ -66,6 +68,7 @@
         renderizar();
     };
 
+    // Nueva lógica: Si falla, escondemos toda la tarjeta del producto
     function manejarErrorImagen(img, codigo) {
         let intento = img.getAttribute('data-tried') || '0';
         if (intento === '0') {
@@ -75,9 +78,8 @@
             img.setAttribute('data-tried', '2');
             img.src = codigo + '_2.jpg';
         } else {
-            // Reemplazamos la imagen fallida por un texto estático
-            img.style.display = 'none';
-            img.parentElement.innerHTML = '<span class="text-muted small">Sin imagen</span>';
+            // Aquí ocultamos todo el contenedor del producto (el div con clase 'col')
+            img.closest('.col').classList.add('hidden-product');
         }
     }
 

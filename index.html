@@ -9,8 +9,12 @@
         .btn-primary { background-color: #003366 !important; border: none; }
         .btn-active { background-color: #5588cc !important; outline: 3px solid #ffcc00; }
         .card { border-radius: 15px; transition: 0.3s; }
-        .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; }
-        .card-img-top { max-height: 100%; width: auto; object-fit: contain; padding: 10px; transition: opacity 0.5s; }
+        
+        /* Contenedor del carrusel */
+        .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
+        .slider-wrapper { display: flex; transition: transform 0.8s ease-in-out; height: 100%; width: 100%; }
+        .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
+        
         #filtros-box { display: flex; flex-wrap: wrap; gap: 8px; }
         .hidden-product { display: none !important; }
     </style>
@@ -46,94 +50,40 @@
         renderizar();
     });
 
-    function inicializarFiltros() {
-        const categorias = [...new Set(productos.map(p => p.CATEGORIA))];
-        const container = document.getElementById('filtros-box');
-        container.innerHTML = categorias.map(c => 
-            `<button class="btn btn-primary btn-sm" onclick="toggleFiltro('categoria', '${c}', this)">${c}</button>`
-        ).join('');
-    }
-
-    function toggleFiltro(tipo, valor, btn) {
-        if (activos[tipo].has(valor)) activos[tipo].delete(valor);
-        else activos[tipo].add(valor);
-        btn.classList.toggle('btn-active');
-        renderizar();
-    }
-
-    document.getElementById('buscador').oninput = renderizar;
-    document.getElementById('precio-slider').oninput = (e) => {
-        document.getElementById('precio-label').innerText = parseInt(e.target.value).toLocaleString();
-        renderizar();
-    };
-
-    // Lógica mejorada: detecta variantes y las hace girar
-    function iniciarCarrusel(img, codigo) {
-        let variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg', codigo + '_3.jpg'];
-        let indice = 0;
-
-        // Verificamos cuáles existen realmente (haciendo un fetch silencioso)
+    function iniciarCarrusel(container, codigo) {
+        let variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg'];
         let existentes = [];
-        variantes.forEach(url => {
-            fetch(url, {method: 'HEAD'}).then(res => {
-                if (res.ok) {
-                    existentes.push(url);
-                    if (existentes.length > 1) { // Si hay más de una, activamos el giro
-                        setInterval(() => {
-                            indice = (indice + 1) % existentes.length;
-                            img.style.opacity = 0;
-                            setTimeout(() => {
-                                img.src = existentes[indice];
-                                img.style.opacity = 1;
-                            }, 500);
-                        }, 3000);
-                    }
-                }
-            });
+        let index = 0;
+
+        // Comprobamos cuáles existen
+        Promise.all(variantes.map(url => fetch(url, {method: 'HEAD'}).then(res => res.ok ? url : null)))
+        .then(results => {
+            existentes = results.filter(r => r !== null);
+            
+            if (existentes.length > 1) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'slider-wrapper';
+                existentes.forEach(src => {
+                    let img = document.createElement('img');
+                    img.src = src;
+                    wrapper.appendChild(img);
+                });
+                container.innerHTML = '';
+                container.appendChild(wrapper);
+
+                // Deslizamiento cada 3 segundos
+                setInterval(() => {
+                    index = (index + 1) % existentes.length;
+                    wrapper.style.transform = `translateX(-${index * 100}%)`;
+                }, 3000);
+            }
         });
     }
 
-    function manejarErrorImagen(img, codigo) {
-        let intento = img.getAttribute('data-tried') || '0';
-        if (intento === '0') {
-            img.setAttribute('data-tried', '1');
-            img.src = codigo + '_1.jpg';
-        } else if (intento === '1') {
-            img.setAttribute('data-tried', '2');
-            img.src = codigo + '_2.jpg';
-        } else {
-            img.closest('.col').classList.add('hidden-product');
-        }
-    }
-
-    function renderizar() {
-        const busqueda = document.getElementById('buscador').value.toLowerCase();
-        const maxP = document.getElementById('precio-slider').value;
-        
-        const filtrados = productos.filter(p => {
-            return (activos.categoria.size === 0 || activos.categoria.has(p.CATEGORIA)) &&
-                   (busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda)) &&
-                   (p.PRECIO <= maxP);
-        });
-
-        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="img-container">
-                        <img src="${p.CODIGO}.jpg" 
-                             class="card-img-top" 
-                             onload="iniciarCarrusel(this, '${p.CODIGO}')"
-                             onerror="manejarErrorImagen(this, '${p.CODIGO}')" 
-                             alt="${p.PRODUCTO}">
-                    </div>
-                    <div class="card-body">
-                        <h6 class="card-title">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
+    // ... (El resto de tus funciones: inicializarFiltros, toggleFiltro, renderizar, etc)
+    // Nota: En el renderizar, llama a la función así:
+    // <div class="img-container" onload="iniciarCarrusel(this, '${p.CODIGO}')">
+    // ...
 </script>
 </body>
 </html>

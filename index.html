@@ -9,6 +9,7 @@
         .btn-cat { background-color: #003366 !important; color: white !important; border: none; width: 100%; text-align: left; margin-bottom: 5px; }
         .btn-active { background-color: #5588cc !important; color: white !important; }
         .card { border-radius: 15px; transition: 0.3s; }
+        .contact-info { font-size: 0.9rem; margin-bottom: 20px; }
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
         .slider-wrapper { display: flex; transition: transform 0.8s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
@@ -19,7 +20,16 @@
 <body class="bg-light">
 
 <div class="container py-4">
-    <h1 class="text-primary text-center mb-4">Librería Cristiana Logos</h1>
+    <h1 class="text-primary text-center mb-0">Librería Cristiana Logos</h1>
+    <div class="text-center contact-info">
+        <p class="mb-1">
+            📍 <a href="https://www.google.com/maps/search/?api=1&query=Calle+35C+Sur+No+78A-18+Kennedy+Central+Bogota" target="_blank" class="text-decoration-none">
+                Calle 35C Sur No 78A-18, Kennedy Central, Bogotá
+            </a>
+        </p>
+        <p>📱 <a href="https://wa.me/573125756581" target="_blank" class="text-decoration-none">312-5756581</a></p>
+    </div>
+    
     <div class="row">
         <div class="col-lg-3">
             <div class="card p-3 mb-4">
@@ -42,14 +52,13 @@
     let productos = [];
     let activos = new Set();
     
-    // Mapeo corregido: Hombre/Mujer apuntan a PUBLICO
     const filtrosConfig = [
         { etiqueta: "Biblia", campo: "CATEGORIA" },
         { etiqueta: "Diccionario", campo: "CATEGORIA" },
         { etiqueta: "Hombre", campo: "PUBLICO" },
         { etiqueta: "Mujer", campo: "PUBLICO" },
         { etiqueta: "NTV", campo: "VERSION" },
-        { etiqueta: "RVR1960", campo: "VERSION" },
+        { etiqueta: "Reina Valera 1960", campo: "VERSION" },
         { etiqueta: "NVI", campo: "VERSION" },
         { etiqueta: "Lenguaje Actual", campo: "VERSION" },
         { etiqueta: "Mensaje", campo: "VERSION" }
@@ -98,21 +107,14 @@
         
         const filtrados = productos.filter(p => {
             const activasArray = Array.from(activos);
-            
-            // Lógica estricta: Busca en la columna específica definida en filtrosConfig
             const cumpleCat = activos.size === 0 || activasArray.every(etiqueta => {
                 const config = filtrosConfig.find(f => f.etiqueta === etiqueta);
                 const valorProducto = String(p[config.campo] || "").trim().toLowerCase();
                 return valorProducto.includes(etiqueta.toLowerCase());
             });
-            
-            const cumpleBusq = busqueda === '' || 
-                               String(p.PRODUCTO || "").toLowerCase().includes(busqueda) || 
-                               String(p.DESCRIPCION || "").toLowerCase().includes(busqueda);
-            
+            const cumpleBusq = busqueda === '' || String(p.PRODUCTO || "").toLowerCase().includes(busqueda) || String(p.DESCRIPCION || "").toLowerCase().includes(busqueda);
             const precioLimpio = parseInt(String(p.PRECIO || "0").replace(/[^0-9]/g, '')) || 0;
             const cumplePrecio = precioLimpio <= maxP;
-            
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
 

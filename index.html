@@ -81,9 +81,9 @@
         document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
             <div class="col">
                 <div class="card h-100 shadow-sm">
-                    <img src="static/0-imagenes/${p.CODIGO}.jpg" 
+                    <img src="${p.CODIGO}.jpg" 
                         class="card-img-top" 
-                        onerror="this.src='https://via.placeholder.com/150'; console.log('Error en: ${p.CODIGO}.jpg');" 
+                        onerror="this.src='https://via.placeholder.com/150'; console.log('No encontré: ${p.CODIGO}.jpg');" 
                         alt="${p.PRODUCTO}">
                     <div class="card-body">
                         <h6 class="card-title">${p.PRODUCTO}</h6>

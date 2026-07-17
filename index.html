@@ -42,12 +42,12 @@
     let productos = [];
     let activos = new Set();
     
-    // Mapeo preciso: qué botón busca en qué columna del JSON
+    // Mapeo corregido: Hombre/Mujer apuntan a PUBLICO
     const filtrosConfig = [
         { etiqueta: "Biblia", campo: "CATEGORIA" },
         { etiqueta: "Diccionario", campo: "CATEGORIA" },
-        { etiqueta: "Hombre", campo: "TIPO" },
-        { etiqueta: "Mujer", campo: "TIPO" },
+        { etiqueta: "Hombre", campo: "PUBLICO" },
+        { etiqueta: "Mujer", campo: "PUBLICO" },
         { etiqueta: "NTV", campo: "VERSION" },
         { etiqueta: "Reina Valera 1960", campo: "VERSION" },
         { etiqueta: "NVI", campo: "VERSION" },
@@ -99,7 +99,7 @@
         const filtrados = productos.filter(p => {
             const activasArray = Array.from(activos);
             
-            // Filtro estricto: el producto debe coincidir en la columna específica de cada botón
+            // Lógica estricta: Busca en la columna específica definida en filtrosConfig
             const cumpleCat = activos.size === 0 || activasArray.every(etiqueta => {
                 const config = filtrosConfig.find(f => f.etiqueta === etiqueta);
                 const valorProducto = String(p[config.campo] || "").trim().toLowerCase();

@@ -11,12 +11,17 @@
         .card { border-radius: 15px; transition: 0.3s; }
         .contact-info { font-size: 0.9rem; margin-bottom: 20px; }
         
-        /* Contenedor de imagen mejorado */
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
         .slider-wrapper { display: flex; transition: transform 0.4s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
         
-        /* Flechas de navegación */
+        /* Estilo de la insignia */
+        .etiqueta-destacado {
+            position: absolute; top: 10px; right: 10px; background-color: #dc3545; color: white;
+            padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: bold;
+            z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 5px; }
         .prev-btn { left: 5px; }
         .next-btn { right: 5px; }
@@ -117,18 +122,22 @@
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
 
-        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
+        document.getElementById('grid-productos').innerHTML = filtrados.map(p => {
+            const etiquetaHtml = (String(p.DESTACADO || "").toUpperCase() === "SI") ? '<div class="etiqueta-destacado">Más Vendido</div>' : '';
+            return `
             <div class="col" id="col-${String(p.CODIGO).trim()}">
                 <div class="card h-100 shadow-sm">
-                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
+                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}">
+                        ${etiquetaHtml}
+                    </div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
                         <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
                         <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
         
         filtrados.forEach(p => configurarSlider(p.CODIGO));
     }
@@ -156,8 +165,8 @@
                 const prev = document.createElement('button'); prev.className = 'nav-btn prev-btn'; prev.innerHTML = '❮';
                 const next = document.createElement('button'); next.className = 'nav-btn next-btn'; next.innerHTML = '❯';
                 container.appendChild(prev); container.appendChild(next);
-                prev.onclick = () => { currentIndex = (currentIndex - 1 + unicos.length) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
-                next.onclick = () => { currentIndex = (currentIndex + 1) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
+                prev.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex - 1 + unicos.length) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
+                next.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex + 1) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
             }
         }
     }

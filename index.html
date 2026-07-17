@@ -9,10 +9,9 @@
         .btn-primary { background-color: #003366 !important; border: none; }
         .btn-active { background-color: #5588cc !important; outline: 3px solid #ffcc00; }
         .card { border-radius: 15px; transition: 0.3s; }
-        .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; }
-        .card-img-top { max-height: 100%; width: auto; object-fit: contain; padding: 10px; }
+        .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; }
+        .card-img-top { max-height: 100%; width: auto; object-fit: contain; padding: 10px; transition: opacity 0.5s; }
         #filtros-box { display: flex; flex-wrap: wrap; gap: 8px; }
-        /* Oculta productos que fallaron al cargar imágenes */
         .hidden-product { display: none !important; }
     </style>
 </head>
@@ -68,7 +67,32 @@
         renderizar();
     };
 
-    // Nueva lógica: Si falla, escondemos toda la tarjeta del producto
+    // Lógica mejorada: detecta variantes y las hace girar
+    function iniciarCarrusel(img, codigo) {
+        let variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg', codigo + '_3.jpg'];
+        let indice = 0;
+
+        // Verificamos cuáles existen realmente (haciendo un fetch silencioso)
+        let existentes = [];
+        variantes.forEach(url => {
+            fetch(url, {method: 'HEAD'}).then(res => {
+                if (res.ok) {
+                    existentes.push(url);
+                    if (existentes.length > 1) { // Si hay más de una, activamos el giro
+                        setInterval(() => {
+                            indice = (indice + 1) % existentes.length;
+                            img.style.opacity = 0;
+                            setTimeout(() => {
+                                img.src = existentes[indice];
+                                img.style.opacity = 1;
+                            }, 500);
+                        }, 3000);
+                    }
+                }
+            });
+        });
+    }
+
     function manejarErrorImagen(img, codigo) {
         let intento = img.getAttribute('data-tried') || '0';
         if (intento === '0') {
@@ -78,7 +102,6 @@
             img.setAttribute('data-tried', '2');
             img.src = codigo + '_2.jpg';
         } else {
-            // Aquí ocultamos todo el contenedor del producto (el div con clase 'col')
             img.closest('.col').classList.add('hidden-product');
         }
     }
@@ -99,6 +122,7 @@
                     <div class="img-container">
                         <img src="${p.CODIGO}.jpg" 
                              class="card-img-top" 
+                             onload="iniciarCarrusel(this, '${p.CODIGO}')"
                              onerror="manejarErrorImagen(this, '${p.CODIGO}')" 
                              alt="${p.PRODUCTO}">
                     </div>

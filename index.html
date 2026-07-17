@@ -9,7 +9,8 @@
         .btn-primary { background-color: #003366 !important; border: none; }
         .btn-active { background-color: #5588cc !important; outline: 3px solid #ffcc00; }
         .card { border-radius: 15px; transition: 0.3s; }
-        .card-img-top { height: 200px; object-fit: contain; padding: 10px; width: 100%; }
+        .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; }
+        .card-img-top { max-height: 100%; width: auto; object-fit: contain; padding: 10px; }
         #filtros-box { display: flex; flex-wrap: wrap; gap: 8px; }
     </style>
 </head>
@@ -74,7 +75,9 @@
             img.setAttribute('data-tried', '2');
             img.src = codigo + '_2.jpg';
         } else {
-            img.style.display = 'none'; // Oculta definitivamente si no encuentra nada
+            // Reemplazamos la imagen fallida por un texto estático
+            img.style.display = 'none';
+            img.parentElement.innerHTML = '<span class="text-muted small">Sin imagen</span>';
         }
     }
 
@@ -91,10 +94,12 @@
         document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
             <div class="col">
                 <div class="card h-100 shadow-sm">
-                    <img src="${p.CODIGO}.jpg" 
-                         class="card-img-top" 
-                         onerror="manejarErrorImagen(this, '${p.CODIGO}')" 
-                         alt="${p.PRODUCTO}">
+                    <div class="img-container">
+                        <img src="${p.CODIGO}.jpg" 
+                             class="card-img-top" 
+                             onerror="manejarErrorImagen(this, '${p.CODIGO}')" 
+                             alt="${p.PRODUCTO}">
+                    </div>
                     <div class="card-body">
                         <h6 class="card-title">${p.PRODUCTO}</h6>
                         <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>

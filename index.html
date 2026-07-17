@@ -45,7 +45,6 @@
     let productos = [];
     let activos = new Set();
     
-    // Lista ajustada a los datos reales de tu hoja
     const ordenCategorias = [
         "Biblia", "Diccionario", "Hombre", "Mujer", 
         "NTV", "Reina Valera 1960", "NVI", "Lenguaje Actual", "Mensaje"
@@ -95,15 +94,14 @@
         const maxP = parseInt(document.getElementById('precio-slider').value);
         
         const filtrados = productos.filter(p => {
-            const campos = [
-                String(p.CATEGORIA), String(p.VERSION), String(p.TIPO), 
-                String(p.TAPA), String(p.COLOR)
-            ].map(c => c.trim().toLowerCase());
-            
+            const categoria = String(p.CATEGORIA).trim().toLowerCase();
+            const tipo = String(p.TIPO).trim().toLowerCase();
+            const version = String(p.VERSION).trim().toLowerCase();
             const activasArray = Array.from(activos).map(c => c.trim().toLowerCase());
             
-            const cumpleCat = activos.size === 0 || activasArray.some(a => 
-                campos.some(campo => campo.includes(a))
+            // Lógica estricta: el producto debe coincidir con los filtros seleccionados
+            const cumpleCat = activos.size === 0 || activasArray.every(a => 
+                categoria.includes(a) || tipo.includes(a) || version.includes(a)
             );
             
             const cumpleBusq = busqueda === '' || 

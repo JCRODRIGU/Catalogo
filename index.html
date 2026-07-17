@@ -7,14 +7,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .btn-primary { background-color: #003366 !important; border: none; }
-        .btn-active { background-color: #5588cc !important; outline: 3px solid #ffcc00; }
+        .btn-active { background-color: #ffcc00 !important; color: #000 !important; border: none; }
         .card { border-radius: 15px; transition: 0.3s; }
         
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
         .slider-wrapper { display: flex; transition: transform 0.8s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
         
-        #filtros-box { display: flex; flex-wrap: wrap; gap: 8px; }
+        /* Ajuste de filtros */
+        #filtros-box { display: flex; flex-wrap: wrap; gap: 6px; }
+        #filtros-box .btn { font-size: 0.85rem; padding: 4px 10px; }
         .hidden-product { display: none !important; }
     </style>
 </head>
@@ -26,11 +28,12 @@
     <div class="row">
         <div class="col-lg-3">
             <div class="card p-3 mb-4">
-                <h5>Filtros</h5>
-                <div id="filtros-box"></div>
+                <h5>Categorías</h5>
+                <div id="filtros-box" class="mb-3"></div>
                 <hr>
-                <h6>Precio Máx: $<span id="precio-label">500,000</span></h6>
-                <input type="range" id="precio-slider" class="form-range" min="0" max="500000" value="500000">
+                <h6>Precio Máx: $<span id="precio-label">250,000</span></h6>
+                <!-- Rango: 0 a 250mil, saltos de 10mil -->
+                <input type="range" id="precio-slider" class="form-range" min="0" max="250000" step="10000" value="250000">
             </div>
         </div>
         <div class="col-lg-9">
@@ -54,14 +57,20 @@
         const categorias = [...new Set(productos.map(p => p.CATEGORIA))];
         const container = document.getElementById('filtros-box');
         container.innerHTML = categorias.map(c => 
-            `<button class="btn btn-primary btn-sm" onclick="toggleFiltro('categoria', '${c}', this)">${c}</button>`
+            `<button class="btn btn-outline-primary btn-sm" onclick="toggleFiltro('categoria', '${c}', this)">${c}</button>`
         ).join('');
     }
 
     function toggleFiltro(tipo, valor, btn) {
-        if (activos[tipo].has(valor)) activos[tipo].delete(valor);
-        else activos[tipo].add(valor);
-        btn.classList.toggle('btn-active');
+        if (activos[tipo].has(valor)) {
+            activos[tipo].delete(valor);
+            btn.classList.remove('btn-active');
+            btn.classList.add('btn-outline-primary');
+        } else {
+            activos[tipo].add(valor);
+            btn.classList.add('btn-active');
+            btn.classList.remove('btn-outline-primary');
+        }
         renderizar();
     }
 
@@ -72,20 +81,13 @@
     };
 
     async function configurarSlider(codigo) {
-        // Limpiamos el código de espacios extra por si el JSON tiene basura
         const cleanCodigo = String(codigo).trim();
         const container = document.getElementById(`slider-${cleanCodigo}`);
         if (!container) return;
 
-        const variantes = [
-            cleanCodigo + '.jpg', 
-            cleanCodigo + '_1.jpg', 
-            cleanCodigo + '_2.jpg', 
-            cleanCodigo + '(1).jpg', 
-            cleanCodigo + '(2).jpg'
-        ];
-        
+        const variantes = [cleanCodigo + '.jpg', cleanCodigo + '_1.jpg', cleanCodigo + '_2.jpg', cleanCodigo + '(1).jpg', cleanCodigo + '(2).jpg'];
         const existentes = [];
+        
         for (let url of variantes) {
             try {
                 const res = await fetch(url, {method: 'HEAD'});
@@ -96,7 +98,6 @@
         const unicos = [...new Set(existentes)];
 
         if (unicos.length === 0) {
-            // Si no hay imagen, ocultamos el producto
             const el = document.getElementById(`col-${cleanCodigo}`);
             if (el) el.classList.add('hidden-product');
         } else {

@@ -66,31 +66,40 @@
     };
 
     function renderizar() {
-        const busqueda = document.getElementById('buscador').value.toLowerCase();
-        const maxP = document.getElementById('precio-slider').value;
-        
-        const filtrados = productos.filter(p => {
-            return (activos.categoria.size === 0 || activos.categoria.has(p.CATEGORIA)) &&
-                   (busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda)) &&
-                   (p.PRECIO <= maxP);
-        });
+    const busqueda = document.getElementById('buscador').value.toLowerCase();
+    const maxP = document.getElementById('precio-slider').value;
+    
+    const filtrados = productos.filter(p => {
+        return (activos.categoria.size === 0 || activos.categoria.has(p.CATEGORIA)) &&
+               (busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda)) &&
+               (p.PRECIO <= maxP);
+    });
 
-        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <!-- Ruta plana: el archivo está en la misma raíz -->
-                    <img src="${p.CODIGO}.jpg" 
-                         class="card-img-top" 
-                         onerror="this.src='https://via.placeholder.com/150'; console.log('Error buscando imagen: ${p.CODIGO}.jpg');" 
-                         alt="${p.PRODUCTO}">
-                    <div class="card-body">
-                        <h6 class="card-title">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
-                    </div>
+    document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <img src="${p.CODIGO}.jpg" 
+                     class="card-img-top" 
+                     onerror="
+                        if (!this.getAttribute('data-tried')) {
+                            this.setAttribute('data-tried', '1');
+                            this.src = '${p.CODIGO}_1.jpg';
+                        } else if (this.getAttribute('data-tried') === '1') {
+                            this.setAttribute('data-tried', '2');
+                            this.src = '${p.CODIGO}_2.jpg';
+                        } else {
+                            this.src = 'https://via.placeholder.com/150';
+                        }
+                     " 
+                     alt="${p.PRODUCTO}">
+                <div class="card-body">
+                    <h6 class="card-title">${p.PRODUCTO}</h6>
+                    <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
                 </div>
             </div>
-        `).join('');
-    }
+        </div>
+    `).join('');
+}
 </script>
 </body>
 </html>

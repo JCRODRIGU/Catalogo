@@ -72,14 +72,17 @@
     };
 
     async function configurarSlider(codigo) {
-        const container = document.getElementById(`slider-${codigo}`);
-        // Lista exhaustiva de formatos posibles
+        // Limpiamos el código de espacios extra por si el JSON tiene basura
+        const cleanCodigo = String(codigo).trim();
+        const container = document.getElementById(`slider-${cleanCodigo}`);
+        if (!container) return;
+
         const variantes = [
-            codigo + '.jpg', 
-            codigo + '_1.jpg', 
-            codigo + '_2.jpg', 
-            codigo + '(1).jpg', 
-            codigo + '(2).jpg'
+            cleanCodigo + '.jpg', 
+            cleanCodigo + '_1.jpg', 
+            cleanCodigo + '_2.jpg', 
+            cleanCodigo + '(1).jpg', 
+            cleanCodigo + '(2).jpg'
         ];
         
         const existentes = [];
@@ -90,11 +93,12 @@
             } catch(e) {}
         }
 
-        // Usamos Set para quitar duplicados por si acaso
         const unicos = [...new Set(existentes)];
 
         if (unicos.length === 0) {
-            document.getElementById(`col-${codigo}`).classList.add('hidden-product');
+            // Si no hay imagen, ocultamos el producto
+            const el = document.getElementById(`col-${cleanCodigo}`);
+            if (el) el.classList.add('hidden-product');
         } else {
             const wrapper = document.createElement('div');
             wrapper.className = 'slider-wrapper';
@@ -126,9 +130,9 @@
         );
 
         document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
-            <div class="col" id="col-${p.CODIGO}">
+            <div class="col" id="col-${String(p.CODIGO).trim()}">
                 <div class="card h-100 shadow-sm">
-                    <div class="img-container" id="slider-${p.CODIGO}"></div>
+                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
                         <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>

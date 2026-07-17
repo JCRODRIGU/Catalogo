@@ -77,15 +77,31 @@ else:
 client = gspread.authorize(creds)
 sheet = client.open_by_key("1YJ4ioXBTDSUifqoMf3VY2_vhakrmOY6q8RS9aituNKk").worksheet("CATALOGO")
 
+def limpiar_precio(valor):
+    """Convierte cualquier formato de precio a un número flotante puro."""
+    if isinstance(valor, (int, float)):
+        return float(valor)
+    # Eliminar símbolos de moneda, puntos de miles y comas (por si acaso)
+    limpio = str(valor).replace('$', '').replace('.', '').replace(',', '')
+    try:
+        return float(limpio)
+    except ValueError:
+        return 0.0
+
+# Ahora ajustamos tu función get_data para usarla:
 def get_data():
     datos = sheet.get_all_records()
     productos_limpios = []
     for p in datos:
         nombre = str(p.get('PRODUCTO', '')).strip()
         codigo = str(p.get('CODIGO', '')).strip()
-        # Verificar imágenes para validar producto
+        
+        # Limpiamos el precio aquí mismo antes de hacer nada
+        p['PRECIO'] = limpiar_precio(p.get('PRECIO', 0))
+        
         existe_img = os.path.exists(os.path.join('static', '0-imagenes', f"{codigo}.jpg")) or \
                      os.path.exists(os.path.join('static', '0-imagenes', f"{codigo}_1.jpg"))
+        
         if len(nombre) > 2 and codigo != "" and existe_img:
             productos_limpios.append(p)
     return productos_limpios

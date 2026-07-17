@@ -9,11 +9,9 @@
         .carousel-item img { height: 250px; object-fit: contain; background: #f8f9fa; }
         .card-title { min-height: 3em; font-size: 1.1rem; }
         .card { margin-bottom: 20px; border-radius: 15px; transition: transform 0.2s; }
-        .card:active { transform: scale(0.98); }
-        .btn-success { background-color: #25d366; border: none; font-weight: bold; }
-        .carousel-control-prev-icon, .carousel-control-next-icon { background-color: rgba(0, 0, 0, 0.5); border-radius: 50%; padding: 10px; }
         .btn-primary { background-color: #003366 !important; border-color: #003366 !important; color: white !important; width: 100%; }
         .btn-active { background-color: #5588cc !important; border-color: #5588cc !important; font-weight: bold; outline: 3px solid #ffcc00; }
+        .btn-success { background-color: #25d366; border: none; font-weight: bold; }
     </style>
 </head>
 <body class="bg-light">
@@ -29,8 +27,8 @@
                 <div class="d-grid mb-3">
                     <a href="/" class="btn btn-outline-secondary btn-sm">❌ Limpiar todos los filtros</a>
                 </div>
-                <hr>
                 
+                <hr>
                 <h6>Categoría</h6>
                 <div class="d-grid gap-2 mb-3">
                     {% for cat in categorias %}
@@ -50,19 +48,36 @@
                 
                 <hr>
                 <h6>Versión</h6>
-                <div class="d-grid gap-2">
+                <div class="d-grid gap-2 mb-3">
                     {% for ver in versiones %}
                         <a href="{{ generar_url('version', ver, cat_activos, pub_activos, ver_activos) }}" 
                            class="btn btn-primary btn-sm {% if ver in ver_activos %}btn-active{% endif %}">{{ ver }}</a>
                     {% endfor %}
                 </div>
+
+                <hr>
+                <h6>Precio</h6>
+                <form action="/" method="GET" class="px-1">
+                    <!-- Mantener filtros previos activos -->
+                    {% for c in cat_activos %}<input type="hidden" name="categoria" value="{{c}}">{% endfor %}
+                    {% for p in pub_activos %}<input type="hidden" name="publico" value="{{p}}">{% endfor %}
+                    {% for v in ver_activos %}<input type="hidden" name="version" value="{{v}}">{% endfor %}
+                    
+                    <label class="small text-muted">Min: ${{p_min_actual|int}}</label>
+                    <input type="range" class="form-range" name="precio_min" min="{{min_g}}" max="{{max_g}}" value="{{p_min_actual}}">
+                    
+                    <label class="small text-muted">Max: ${{p_max_actual|int}}</label>
+                    <input type="range" class="form-range" name="precio_max" min="{{min_g}}" max="{{max_g}}" value="{{p_max_actual}}">
+                    
+                    <button type="submit" class="btn btn-primary btn-sm mt-2">Aplicar Rango</button>
+                </form>
             </div>
         </div>
 
         <!-- Contenido principal -->
         <div class="col-lg-9">
             <div class="mb-4">
-                <input type="text" id="buscador" class="form-control form-control-lg shadow-sm" placeholder="🔍 Buscar libro por nombre..." onkeyup="filtrarProductos()">
+                <input type="text" id="buscador" class="form-control form-control-lg shadow-sm" placeholder="🔍 Buscar libro..." onkeyup="filtrarProductos()">
             </div>
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="contenedor-productos">
                 {% for p in productos %}
@@ -80,7 +95,7 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ p.PRODUCTO }}</h5>
                             <p class="card-text">
-                                <strong>Precio:</strong> ${{ p.PRECIO }}<br>
+                                <strong>Precio:</strong> ${{ "{:,.0f}".format(p.PRECIO) }}<br>
                                 <small class="text-muted">{{ p.CATEGORIA }} | {{ p.PUBLICO }} | {{ p.VERSION }}</small>
                             </p>
                         </div>
@@ -95,7 +110,6 @@
     </div>
 </div>
 
-<!-- Modal Carrito -->
 <div class="fixed-bottom p-3 text-center" style="z-index: 1000;"><button class="btn btn-success btn-lg shadow" data-bs-toggle="modal" data-bs-target="#modalCarrito">🛒 Ver Pedido (<span id="contador-carrito">0</span>)</button></div>
 <div class="modal fade" id="modalCarrito" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
@@ -135,7 +149,6 @@
         texto += `%0ATotal: $${total}`; window.location.href = "https://wa.me/573125756581?text=" + texto;
     }
     actualizarContador();
-    document.addEventListener("DOMContentLoaded", function() { document.querySelectorAll('.carousel').forEach(el => new bootstrap.Carousel(el, { interval: 3000, ride: 'carousel' })); });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

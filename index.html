@@ -31,7 +31,7 @@
                 <div id="filtros-box"></div>
                 <hr>
                 <h6>Precio Máx: $<span id="precio-label">250,000</span></h6>
-                <input type="range" id="precio-slider" class="form-range" min="0" max="250000" step="10000" value="250000">
+                <input type="range" id="precio-slider" class="form-range" min="0" max="300000" step="10000" value="300000">
             </div>
         </div>
         <div class="col-lg-9">
@@ -47,8 +47,8 @@
     const ordenCategorias = [
         "Biblias", "Libros", "Regalos", 
         "Presentacion Hombre", "Presentacion Mujer", 
-        "Version NTV", "Version Reina Valera 1960", "Version NVI", 
-        "Version Lenguaje Actual", "Version Mensaje"
+        "NTV", "Reina Valera 1960", "NVI", 
+        "Lenguaje Actual", "Mensaje"
     ];
 
     fetch('productos.json').then(r => r.json()).then(data => {
@@ -92,15 +92,26 @@
         const busqueda = document.getElementById('buscador').value.toLowerCase();
         const maxP = parseInt(document.getElementById('precio-slider').value);
         
-        // Convertimos nuestras categorías activas a minúsculas y sin espacios para comparar
-        const activasNormalizadas = Array.from(activos).map(c => c.trim().toLowerCase());
-
         const filtrados = productos.filter(p => {
-            const catProducto = String(p.CATEGORIA).trim().toLowerCase();
+            // Buscamos en varias columnas a la vez
+            const campos = [
+                String(p.CATEGORIA), String(p.VERSION), String(p.TIPO), 
+                String(p.TAPA), String(p.COLOR)
+            ].map(c => c.trim().toLowerCase());
             
-            const cumpleCat = activos.size === 0 || activasNormalizadas.includes(catProducto);
-            const cumpleBusq = busqueda === '' || String(p.PRODUCTO).toLowerCase().includes(busqueda);
-            const cumplePrecio = parseInt(p.PRECIO) <= maxP;
+            const activasArray = Array.from(activos).map(c => c.trim().toLowerCase());
+            
+            const cumpleCat = activos.size === 0 || activasArray.some(a => 
+                campos.some(campo => campo.includes(a))
+            );
+            
+            const cumpleBusq = busqueda === '' || 
+                               String(p.PRODUCTO).toLowerCase().includes(busqueda) || 
+                               String(p.DESCRIPCION).toLowerCase().includes(busqueda);
+            
+            // Limpiamos el precio de signos "$" o puntos antes de comparar
+            const precioLimpio = parseInt(String(p.PRECIO).replace(/[^0-9]/g, '')) || 0;
+            const cumplePrecio = precioLimpio <= maxP;
             
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
@@ -111,7 +122,7 @@
                     <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">$${parseInt(p.PRECIO).toLocaleString()}</p>
+                        <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '')).toLocaleString()}</p>
                         <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" 
                            target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
                     </div>

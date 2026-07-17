@@ -9,12 +9,9 @@
         .btn-primary { background-color: #003366 !important; border: none; }
         .btn-active { background-color: #5588cc !important; outline: 3px solid #ffcc00; }
         .card { border-radius: 15px; transition: 0.3s; }
-        
-        /* Contenedor del carrusel */
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
         .slider-wrapper { display: flex; transition: transform 0.8s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
-        
         #filtros-box { display: flex; flex-wrap: wrap; gap: 8px; }
         .hidden-product { display: none !important; }
     </style>
@@ -71,41 +68,6 @@
         renderizar();
     };
 
-    function configurarSlider(container, codigo) {
-        let variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg'];
-        
-        // Verificamos cuáles existen
-        Promise.all(variantes.map(url => fetch(url, {method: 'HEAD'}).then(res => res.ok ? url : null)))
-        .then(results => {
-            let existentes = results.filter(r => r !== null);
-            
-            if (existentes.length === 0) {
-                // Si no existe ni la principal, ocultamos el producto
-                container.closest('.col').classList.add('hidden-product');
-            } else {
-                // Creamos el slider
-                const wrapper = document.createElement('div');
-                wrapper.className = 'slider-wrapper';
-                existentes.forEach(src => {
-                    let img = document.createElement('img');
-                    img.src = src;
-                    wrapper.appendChild(img);
-                });
-                container.innerHTML = '';
-                container.appendChild(wrapper);
-
-                // Si hay más de una, iniciamos el giro
-                if (existentes.length > 1) {
-                    let index = 0;
-                    setInterval(() => {
-                        index = (index + 1) % existentes.length;
-                        wrapper.style.transform = `translateX(-${index * 100}%)`;
-                    }, 3000);
-                }
-            }
-        });
-    }
-
     function renderizar() {
         const busqueda = document.getElementById('buscador').value.toLowerCase();
         const maxP = document.getElementById('precio-slider').value;
@@ -116,13 +78,13 @@
                    (p.PRECIO <= maxP);
         });
 
-        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
-            <div class="col">
+        const grid = document.getElementById('grid-productos');
+        grid.innerHTML = filtrados.map(p => `
+            <div class="col" id="col-${p.CODIGO}">
                 <div class="card h-100 shadow-sm">
                     <div class="img-container" id="slider-${p.CODIGO}">
-                        <!-- Cargando... -->
+                        <img src="${p.CODIGO}.jpg" style="width:100%; height:100%; object-fit:contain; padding:10px;" alt="${p.PRODUCTO}">
                     </div>
-                    <script>configurarSlider(document.getElementById('slider-${p.CODIGO}'), '${p.CODIGO}');<\/script>
                     <div class="card-body">
                         <h6 class="card-title">${p.PRODUCTO}</h6>
                         <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
@@ -130,6 +92,44 @@
                 </div>
             </div>
         `).join('');
+
+        // Una vez renderizados, procesamos las imágenes
+        filtrados.forEach(p => configurarSlider(p.CODIGO));
+    }
+
+    async function configurarSlider(codigo) {
+        const container = document.getElementById(`slider-${codigo}`);
+        const variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg'];
+        
+        const existentes = [];
+        for (let url of variantes) {
+            try {
+                const res = await fetch(url, {method: 'HEAD'});
+                if (res.ok) existentes.push(url);
+            } catch(e) {}
+        }
+
+        if (existentes.length === 0) {
+            document.getElementById(`col-${codigo}`).classList.add('hidden-product');
+        } else {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'slider-wrapper';
+            existentes.forEach(src => {
+                let img = document.createElement('img');
+                img.src = src;
+                wrapper.appendChild(img);
+            });
+            container.innerHTML = '';
+            container.appendChild(wrapper);
+
+            if (existentes.length > 1) {
+                let index = 0;
+                setInterval(() => {
+                    index = (index + 1) % existentes.length;
+                    wrapper.style.transform = `translateX(-${index * 100}%)`;
+                }, 3000);
+            }
+        }
     }
 </script>
 </body>

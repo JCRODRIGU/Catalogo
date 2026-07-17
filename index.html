@@ -52,13 +52,15 @@
     let productos = [];
     let activos = new Set();
     
+    // Ajustamos la configuración para que sea flexible
     const filtrosConfig = [
         { etiqueta: "Biblia", campo: "CATEGORIA" },
         { etiqueta: "Diccionario", campo: "CATEGORIA" },
         { etiqueta: "Hombre", campo: "PUBLICO" },
         { etiqueta: "Mujer", campo: "PUBLICO" },
         { etiqueta: "NTV", campo: "VERSION" },
-        { etiqueta: "RVR1960", campo: "VERSION" },
+        // Aquí le decimos al sistema: si el botón es este, busca "rvr1960"
+        { etiqueta: "Reina Valera 1960", campo: "VERSION", alias: "rvr1960" },
         { etiqueta: "NVI", campo: "VERSION" },
         { etiqueta: "Lenguaje Actual", campo: "VERSION" },
         { etiqueta: "Mensaje", campo: "VERSION" }
@@ -110,7 +112,11 @@
             const cumpleCat = activos.size === 0 || activasArray.every(etiqueta => {
                 const config = filtrosConfig.find(f => f.etiqueta === etiqueta);
                 const valorProducto = String(p[config.campo] || "").trim().toLowerCase();
-                return valorProducto.includes(etiqueta.toLowerCase());
+                
+                // Usamos el alias si existe, si no, usamos la etiqueta original
+                const terminoBusqueda = (config.alias || etiqueta).toLowerCase();
+                
+                return valorProducto.includes(terminoBusqueda);
             });
             const cumpleBusq = busqueda === '' || String(p.PRODUCTO || "").toLowerCase().includes(busqueda) || String(p.DESCRIPCION || "").toLowerCase().includes(busqueda);
             const precioLimpio = parseInt(String(p.PRECIO || "0").replace(/[^0-9]/g, '')) || 0;

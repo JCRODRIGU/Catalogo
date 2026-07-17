@@ -9,7 +9,7 @@
         .btn-primary { background-color: #003366 !important; border: none; }
         .btn-active { background-color: #5588cc !important; outline: 3px solid #ffcc00; }
         .card { border-radius: 15px; transition: 0.3s; }
-        .card-img-top { height: 200px; object-fit: contain; padding: 10px; }
+        .card-img-top { height: 200px; object-fit: contain; padding: 10px; width: 100%; }
         #filtros-box { display: flex; flex-wrap: wrap; gap: 8px; }
     </style>
 </head>
@@ -65,6 +65,19 @@
         renderizar();
     };
 
+    function manejarErrorImagen(img, codigo) {
+        let intento = img.getAttribute('data-tried') || '0';
+        if (intento === '0') {
+            img.setAttribute('data-tried', '1');
+            img.src = codigo + '_1.jpg';
+        } else if (intento === '1') {
+            img.setAttribute('data-tried', '2');
+            img.src = codigo + '_2.jpg';
+        } else {
+            img.style.display = 'none'; // Oculta definitivamente si no encuentra nada
+        }
+    }
+
     function renderizar() {
         const busqueda = document.getElementById('buscador').value.toLowerCase();
         const maxP = document.getElementById('precio-slider').value;
@@ -80,17 +93,7 @@
                 <div class="card h-100 shadow-sm">
                     <img src="${p.CODIGO}.jpg" 
                          class="card-img-top" 
-                         onerror="
-                            if (!this.getAttribute('data-tried')) {
-                                this.setAttribute('data-tried', '1');
-                                this.src = '${p.CODIGO}_1.jpg';
-                            } else if (this.getAttribute('data-tried') === '1') {
-                                this.setAttribute('data-tried', '2');
-                                this.src = '${p.CODIGO}_2.jpg';
-                            } else {
-                                this.style.display = 'none';
-                            }
-                         " 
+                         onerror="manejarErrorImagen(this, '${p.CODIGO}')" 
                          alt="${p.PRODUCTO}">
                     <div class="card-body">
                         <h6 class="card-title">${p.PRODUCTO}</h6>

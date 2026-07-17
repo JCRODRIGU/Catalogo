@@ -81,13 +81,14 @@
                     <img src="${p.CODIGO}.jpg" 
                          class="card-img-top" 
                          onerror="
-                            let base = '${p.CODIGO}';
-                            if (!this.src.includes('_1.jpg') && !this.src.includes('_2.jpg')) {
-                                this.src = base + '_1.jpg';
-                            } else if (this.src.includes('_1.jpg')) {
-                                this.src = base + '_2.jpg';
+                            if (!this.getAttribute('data-tried')) {
+                                this.setAttribute('data-tried', '1');
+                                this.src = '${p.CODIGO}_1.jpg';
+                            } else if (this.getAttribute('data-tried') === '1') {
+                                this.setAttribute('data-tried', '2');
+                                this.src = '${p.CODIGO}_2.jpg';
                             } else {
-                                this.src = 'https://via.placeholder.com/150';
+                                this.style.display = 'none';
                             }
                          " 
                          alt="${p.PRODUCTO}">

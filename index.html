@@ -50,17 +50,40 @@
         renderizar();
     });
 
-    function iniciarCarrusel(container, codigo) {
-        let variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg'];
-        let existentes = [];
-        let index = 0;
+    function inicializarFiltros() {
+        const categorias = [...new Set(productos.map(p => p.CATEGORIA))];
+        const container = document.getElementById('filtros-box');
+        container.innerHTML = categorias.map(c => 
+            `<button class="btn btn-primary btn-sm" onclick="toggleFiltro('categoria', '${c}', this)">${c}</button>`
+        ).join('');
+    }
 
-        // Comprobamos cuáles existen
+    function toggleFiltro(tipo, valor, btn) {
+        if (activos[tipo].has(valor)) activos[tipo].delete(valor);
+        else activos[tipo].add(valor);
+        btn.classList.toggle('btn-active');
+        renderizar();
+    }
+
+    document.getElementById('buscador').oninput = renderizar;
+    document.getElementById('precio-slider').oninput = (e) => {
+        document.getElementById('precio-label').innerText = parseInt(e.target.value).toLocaleString();
+        renderizar();
+    };
+
+    function configurarSlider(container, codigo) {
+        let variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg'];
+        
+        // Verificamos cuáles existen
         Promise.all(variantes.map(url => fetch(url, {method: 'HEAD'}).then(res => res.ok ? url : null)))
         .then(results => {
-            existentes = results.filter(r => r !== null);
+            let existentes = results.filter(r => r !== null);
             
-            if (existentes.length > 1) {
+            if (existentes.length === 0) {
+                // Si no existe ni la principal, ocultamos el producto
+                container.closest('.col').classList.add('hidden-product');
+            } else {
+                // Creamos el slider
                 const wrapper = document.createElement('div');
                 wrapper.className = 'slider-wrapper';
                 existentes.forEach(src => {
@@ -71,19 +94,43 @@
                 container.innerHTML = '';
                 container.appendChild(wrapper);
 
-                // Deslizamiento cada 3 segundos
-                setInterval(() => {
-                    index = (index + 1) % existentes.length;
-                    wrapper.style.transform = `translateX(-${index * 100}%)`;
-                }, 3000);
+                // Si hay más de una, iniciamos el giro
+                if (existentes.length > 1) {
+                    let index = 0;
+                    setInterval(() => {
+                        index = (index + 1) % existentes.length;
+                        wrapper.style.transform = `translateX(-${index * 100}%)`;
+                    }, 3000);
+                }
             }
         });
     }
 
-    // ... (El resto de tus funciones: inicializarFiltros, toggleFiltro, renderizar, etc)
-    // Nota: En el renderizar, llama a la función así:
-    // <div class="img-container" onload="iniciarCarrusel(this, '${p.CODIGO}')">
-    // ...
+    function renderizar() {
+        const busqueda = document.getElementById('buscador').value.toLowerCase();
+        const maxP = document.getElementById('precio-slider').value;
+        
+        const filtrados = productos.filter(p => {
+            return (activos.categoria.size === 0 || activos.categoria.has(p.CATEGORIA)) &&
+                   (busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda)) &&
+                   (p.PRECIO <= maxP);
+        });
+
+        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="img-container" id="slider-${p.CODIGO}">
+                        <!-- Cargando... -->
+                    </div>
+                    <script>configurarSlider(document.getElementById('slider-${p.CODIGO}'), '${p.CODIGO}');<\/script>
+                    <div class="card-body">
+                        <h6 class="card-title">${p.PRODUCTO}</h6>
+                        <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
 </script>
 </body>
 </html>

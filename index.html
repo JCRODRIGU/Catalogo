@@ -6,17 +6,15 @@
     <title>Librería Cristiana Logos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Azul oscuro para botones, blanco para texto */
-        .btn-cat { background-color: #003366 !important; color: white !important; border: none; }
-        /* Azul claro cuando está seleccionado */
+        .btn-cat { background-color: #003366 !important; color: white !important; border: none; width: 100%; text-align: left; }
         .btn-active { background-color: #5588cc !important; color: white !important; }
-        
         .card { border-radius: 15px; transition: 0.3s; }
+        
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
         .slider-wrapper { display: flex; transition: transform 0.8s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
         
-        #filtros-box { display: flex; flex-wrap: wrap; gap: 6px; }
+        #filtros-box { display: flex; flex-direction: column; gap: 8px; }
         .hidden-product { display: none !important; }
     </style>
 </head>
@@ -28,9 +26,9 @@
     <div class="row">
         <div class="col-lg-3">
             <div class="card p-3 mb-4">
-                <h5>Filtros</h5>
-                <button class="btn btn-danger btn-sm mb-2 w-100" onclick="limpiarFiltros()">Limpiar Filtros</button>
-                <div id="filtros-box" class="mb-3"></div>
+                <h5>Categorías</h5>
+                <button class="btn btn-danger btn-sm mb-3 w-100" onclick="limpiarFiltros()">Limpiar Filtros</button>
+                <div id="filtros-box"></div>
                 <hr>
                 <h6>Precio Máx: $<span id="precio-label">250,000</span></h6>
                 <input type="range" id="precio-slider" class="form-range" min="0" max="250000" step="10000" value="250000">
@@ -46,8 +44,6 @@
 <script>
     let productos = [];
     let activos = new Set();
-    
-    // Orden definido de categorías
     const ordenCategorias = [
         "Biblias", "Libros", "Regalos", 
         "Presentacion Hombre", "Presentacion Mujer", 
@@ -94,12 +90,17 @@
 
     function renderizar() {
         const busqueda = document.getElementById('buscador').value.toLowerCase();
-        const maxP = document.getElementById('precio-slider').value;
+        const maxP = parseInt(document.getElementById('precio-slider').value);
         
         const filtrados = productos.filter(p => {
-            const cumpleCat = activos.size === 0 || activos.has(p.CATEGORIA);
-            const cumpleBusq = busqueda === '' || p.PRODUCTO.toLowerCase().includes(busqueda);
-            const cumplePrecio = p.PRECIO <= maxP;
+            // Limpiamos strings para comparar bien
+            const cat = String(p.CATEGORIA).trim();
+            const prod = String(p.PRODUCTO).toLowerCase();
+            
+            const cumpleCat = activos.size === 0 || activos.has(cat);
+            const cumpleBusq = busqueda === '' || prod.includes(busqueda);
+            const cumplePrecio = parseInt(p.PRECIO) <= maxP;
+            
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
 
@@ -109,7 +110,7 @@
                     <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
+                        <p class="text-primary fw-bold">$${parseInt(p.PRECIO).toLocaleString()}</p>
                         <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" 
                            target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
                     </div>

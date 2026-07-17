@@ -8,6 +8,7 @@
         .btn-primary { background-color: #003366 !important; border: none; }
         .btn-active { background-color: #5588cc !important; outline: 3px solid #ffcc00; }
         .card { border-radius: 15px; transition: 0.3s; }
+        .card-img-top { height: 250px; object-fit: contain; padding: 10px; }
     </style>
 </head>
 <body class="bg-light">
@@ -20,8 +21,8 @@
                 <h5>Filtros</h5>
                 <div id="filtros-box"></div>
                 <hr>
-                <h6>Precio Máx: $<span id="precio-label">...</span></h6>
-                <input type="range" id="precio-slider" class="form-range" min="0" max="500000">
+                <h6>Precio Máx: $<span id="precio-label">500,000</span></h6>
+                <input type="range" id="precio-slider" class="form-range" min="0" max="500000" value="500000">
             </div>
         </div>
         <div class="col-lg-9">
@@ -33,8 +34,9 @@
 
 <script>
     let productos = [];
-    let activos = { categoria: new Set(), publico: new Set(), version: new Set() };
+    let activos = { categoria: new Set() };
 
+    // Carga tu archivo JSON
     fetch('productos.json').then(r => r.json()).then(data => {
         productos = data;
         inicializarFiltros();
@@ -44,8 +46,7 @@
     function inicializarFiltros() {
         const categorias = [...new Set(productos.map(p => p.CATEGORIA))];
         const container = document.getElementById('filtros-box');
-        // Ejemplo para categorías (repite lógica para otros)
-        container.innerHTML = '<h6>Categorías</h6>' + categorias.map(c => 
+        container.innerHTML = categorias.map(c => 
             `<button class="btn btn-primary btn-sm m-1" onclick="toggleFiltro('categoria', '${c}', this)">${c}</button>`
         ).join('');
     }
@@ -75,9 +76,15 @@
 
         document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
             <div class="col">
-                <div class="card h-100 p-3 shadow-sm">
-                    <h5>${p.PRODUCTO}</h5>
-                    <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
+                <div class="card h-100 shadow-sm">
+                    <img src="./static/0-imagenes/${p.CODIGO}.jpg" 
+                         class="card-img-top" 
+                         onerror="this.src='https://via.placeholder.com/150';" 
+                         alt="${p.PRODUCTO}">
+                    <div class="card-body">
+                        <h6 class="card-title">${p.PRODUCTO}</h6>
+                        <p class="text-primary fw-bold">$${p.PRECIO.toLocaleString()}</p>
+                    </div>
                 </div>
             </div>
         `).join('');

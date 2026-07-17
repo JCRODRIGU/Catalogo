@@ -10,9 +10,17 @@
         .btn-active { background-color: #5588cc !important; color: white !important; }
         .card { border-radius: 15px; transition: 0.3s; }
         .contact-info { font-size: 0.9rem; margin-bottom: 20px; }
+        
+        /* Contenedor de imagen mejorado */
         .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
-        .slider-wrapper { display: flex; transition: transform 0.8s ease-in-out; height: 100%; width: 100%; }
+        .slider-wrapper { display: flex; transition: transform 0.4s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
+        
+        /* Flechas de navegación */
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 5px; }
+        .prev-btn { left: 5px; }
+        .next-btn { right: 5px; }
+        
         #filtros-box { display: flex; flex-direction: column; }
         .hidden-product { display: none !important; }
     </style>
@@ -23,9 +31,7 @@
     <h1 class="text-primary text-center mb-0">Librería Cristiana Logos</h1>
     <div class="text-center contact-info">
         <p class="mb-1">
-            📍 <a href="https://maps.app.goo.gl/4eKMiWTLzSn7yvYBA" target="_blank" class="text-decoration-none">
-                Calle 35C Sur No 78A-18, Kennedy Central, Bogotá
-            </a>
+            📍 <a href="https://maps.app.goo.gl/4eKMiWTLzSn7yvYBA" target="_blank" class="text-decoration-none">Calle 35C Sur No 78A-18, Kennedy Central, Bogotá</a>
         </p>
         <p>📱 <a href="https://wa.me/573125756581" target="_blank" class="text-decoration-none">312-5756581</a></p>
     </div>
@@ -51,15 +57,12 @@
 <script>
     let productos = [];
     let activos = new Set();
-    
-    // Ajustamos la configuración para que sea flexible
     const filtrosConfig = [
         { etiqueta: "Biblia", campo: "CATEGORIA" },
         { etiqueta: "Diccionario", campo: "CATEGORIA" },
         { etiqueta: "Hombre", campo: "PUBLICO" },
         { etiqueta: "Mujer", campo: "PUBLICO" },
         { etiqueta: "NTV", campo: "VERSION" },
-        // Aquí le decimos al sistema: si el botón es este, busca "rvr1960"
         { etiqueta: "Reina Valera 1960", campo: "VERSION", alias: "rvr1960" },
         { etiqueta: "NVI", campo: "VERSION" },
         { etiqueta: "Lenguaje Actual", campo: "VERSION" },
@@ -74,19 +77,12 @@
 
     function inicializarFiltros() {
         const container = document.getElementById('filtros-box');
-        container.innerHTML = filtrosConfig.map(f => 
-            `<button class="btn btn-cat btn-sm" onclick="toggleFiltro('${f.etiqueta}', this)">${f.etiqueta}</button>`
-        ).join('');
+        container.innerHTML = filtrosConfig.map(f => `<button class="btn btn-cat btn-sm" onclick="toggleFiltro('${f.etiqueta}', this)">${f.etiqueta}</button>`).join('');
     }
 
     function toggleFiltro(valor, btn) {
-        if (activos.has(valor)) {
-            activos.delete(valor);
-            btn.classList.remove('btn-active');
-        } else {
-            activos.add(valor);
-            btn.classList.add('btn-active');
-        }
+        if (activos.has(valor)) { activos.delete(valor); btn.classList.remove('btn-active'); }
+        else { activos.add(valor); btn.classList.add('btn-active'); }
         renderizar();
     }
 
@@ -112,10 +108,7 @@
             const cumpleCat = activos.size === 0 || activasArray.every(etiqueta => {
                 const config = filtrosConfig.find(f => f.etiqueta === etiqueta);
                 const valorProducto = String(p[config.campo] || "").trim().toLowerCase();
-                
-                // Usamos el alias si existe, si no, usamos la etiqueta original
                 const terminoBusqueda = (config.alias || etiqueta).toLowerCase();
-                
                 return valorProducto.includes(terminoBusqueda);
             });
             const cumpleBusq = busqueda === '' || String(p.PRODUCTO || "").toLowerCase().includes(busqueda) || String(p.DESCRIPCION || "").toLowerCase().includes(busqueda);
@@ -131,8 +124,7 @@
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
                         <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
-                        <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" 
-                           target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
+                        <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
                     </div>
                 </div>
             </div>
@@ -147,22 +139,25 @@
         if (!container) return;
         const variantes = [cleanCodigo + '.jpg', cleanCodigo + '_1.jpg', cleanCodigo + '_2.jpg', cleanCodigo + '(1).jpg', cleanCodigo + '(2).jpg'];
         const existentes = [];
-        for (let url of variantes) {
-            try { const res = await fetch(url, {method: 'HEAD'}); if (res.ok) existentes.push(url); } catch(e) {}
-        }
+        for (let url of variantes) { try { const res = await fetch(url, {method: 'HEAD'}); if (res.ok) existentes.push(url); } catch(e) {} }
         const unicos = [...new Set(existentes)];
+        
         if (unicos.length === 0) {
             const el = document.getElementById(`col-${cleanCodigo}`);
             if (el) el.classList.add('hidden-product');
         } else {
+            let currentIndex = 0;
             const wrapper = document.createElement('div');
             wrapper.className = 'slider-wrapper';
             unicos.forEach(src => { let img = document.createElement('img'); img.src = src; wrapper.appendChild(img); });
-            container.innerHTML = '';
             container.appendChild(wrapper);
+
             if (unicos.length > 1) {
-                let index = 0;
-                setInterval(() => { index = (index + 1) % unicos.length; wrapper.style.transform = `translateX(-${index * 100}%)`; }, 3000);
+                const prev = document.createElement('button'); prev.className = 'nav-btn prev-btn'; prev.innerHTML = '❮';
+                const next = document.createElement('button'); next.className = 'nav-btn next-btn'; next.innerHTML = '❯';
+                container.appendChild(prev); container.appendChild(next);
+                prev.onclick = () => { currentIndex = (currentIndex - 1 + unicos.length) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
+                next.onclick = () => { currentIndex = (currentIndex + 1) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
             }
         }
     }

@@ -75,6 +75,7 @@
 
     fetch('productos.json').then(r => r.json()).then(data => {
         productos = data;
+        console.log("Datos cargados:", productos[0]); // Debug inicial
         inicializarFiltros();
         renderizar();
     });
@@ -134,7 +135,12 @@
             </div>`).join('');
         
         filtrados.forEach(p => {
-            const esDestacado = String(p.DESTACADO || "").trim().toUpperCase().includes("SI");
+            // Lógica de detección ultra-robusta
+            const valorRaw = String(p.DESTACADO || "").trim().toUpperCase();
+            const esDestacado = (valorRaw === "SI" || valorRaw === "S" || valorRaw === "TRUE" || valorRaw === "1");
+            
+            if (esDestacado) console.log("Producto marcado como destacado:", p.PRODUCTO);
+            
             configurarSlider(p.CODIGO, esDestacado);
         });
     }
@@ -153,7 +159,7 @@
             const el = document.getElementById(`col-${cleanCodigo}`);
             if (el) el.classList.add('hidden-product');
         } else {
-            // Inyectamos la etiqueta aquí si es destacado
+            // Se inyecta la etiqueta solo si es destacado
             if (esDestacado) {
                 container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
             }

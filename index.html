@@ -147,11 +147,9 @@
 </div>
 
 <script>
-    // Variables globales
     let productos = [];
     let activos = new Set();
     
-    // Configuración de filtros
     const filtrosConfig = [
         { etiqueta: "Biblia", campo: "CATEGORIA", grupo: "Producto" },
         { etiqueta: "Devocional", campo: "CATEGORIA", grupo: "Producto" },
@@ -166,7 +164,6 @@
         { etiqueta: "Mensaje", campo: "VERSION", grupo: "Versión" }
     ];
 
-    // Carga inicial
     fetch('productos.json')
         .then(r => r.json())
         .then(data => {
@@ -253,7 +250,6 @@
             </div>`;
         }).join('');
         
-        // Inicializar sliders para cada producto renderizado
         filtrados.forEach(p => {
             const valorRaw = String(p.DESTACADO || "").trim().toUpperCase();
             const esDestacado = (valorRaw === "SI" || valorRaw === "S" || valorRaw === "TRUE" || valorRaw === "1");
@@ -267,11 +263,11 @@
         if (!container) return;
         
         const variantes = [
-            cleanCodigo + '.jpg', 
-            cleanCodigo + '_1.jpg', 
-            cleanCodigo + '_2.jpg', 
-            cleanCodigo + '(1).jpg', 
-            cleanCodigo + '(2).jpg'
+            '0-imagenes/' + cleanCodigo + '.jpg', 
+            '0-imagenes/' + cleanCodigo + '_1.jpg', 
+            '0-imagenes/' + cleanCodigo + '_2.jpg', 
+            '0-imagenes/' + cleanCodigo + '(1).jpg', 
+            '0-imagenes/' + cleanCodigo + '(2).jpg'
         ];
         
         const existentes = [];

@@ -25,6 +25,7 @@
         .slider-wrapper { display: flex; transition: transform 0.4s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
         
+        /* Etiquetas */
         .etiqueta-destacado {
             position: absolute;
             top: 20px;
@@ -41,6 +42,22 @@
             z-index: 20;
             pointer-events: none;
         }
+
+        .etiqueta-agotado {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #6c757d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            z-index: 25;
+            pointer-events: none;
+        }
+        
+        .opacity-50 { opacity: 0.6; filter: grayscale(1); }
         
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 5px; }
         .prev-btn { left: 5px; }
@@ -151,17 +168,26 @@
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
 
-        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
+        document.getElementById('grid-productos').innerHTML = filtrados.map(p => {
+            const stock = parseInt(p.STOCK || 0);
+            const estaAgotado = stock <= 0;
+            
+            return `
             <div class="col" id="col-${String(p.CODIGO).trim()}">
-                <div class="card h-100 shadow-sm">
-                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
+                <div class="card h-100 shadow-sm ${estaAgotado ? 'opacity-50' : ''}">
+                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}">
+                        ${estaAgotado ? '<div class="etiqueta-agotado">Agotado</div>' : ''}
+                    </div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
-                        <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
+                        <p class="text-primary fw-bold">${estaAgotado ? 'Sin existencias' : '$' + parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
+                        <a href="https://wa.me/573125756581?text=${estaAgotado ? 'Hola, me interesa el producto ' + encodeURIComponent(p.PRODUCTO) + ' que aparece agotado, ¿tendrán más pronto?' : 'Hola, me interesa: ' + encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn ${estaAgotado ? 'btn-secondary' : 'btn-success'} btn-sm w-100 mt-2">
+                            ${estaAgotado ? '💬 Consultar disponibilidad' : '💬 Consultar por WhatsApp'}
+                        </a>
                     </div>
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
         
         filtrados.forEach(p => {
             const valorRaw = String(p.DESTACADO || "").trim().toUpperCase();

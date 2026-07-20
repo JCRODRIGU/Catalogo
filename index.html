@@ -4,40 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Librería Cristiana Logos</title>
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <style>
-        /* Estilos generales */
-        body { background-color: #f8f9fa; }
+        .btn-cat { background-color: #003366 !important; color: white !important; border: none; width: 100%; text-align: left; margin-bottom: 5px; }
+        .btn-active { background-color: #5588cc !important; color: white !important; }
+        .card { border-radius: 15px; transition: 0.3s; }
+        .contact-info { font-size: 0.9rem; margin-bottom: 20px; }
         
-        .btn-cat { 
-            background-color: #003366 !important; 
-            color: white !important; 
-            border: none; 
-            width: 100%; 
-            text-align: left; 
-            margin-bottom: 5px; 
-        }
-        
-        .btn-active { 
-            background-color: #5588cc !important; 
-            color: white !important; 
-        }
-        
-        .card { 
-            border-radius: 15px; 
-            transition: 0.3s; 
-            height: 100%;
-        }
-        
-        .contact-info { 
-            font-size: 0.9rem; 
-            margin-bottom: 20px; 
-        }
-        
-        /* Contenedor de imágenes */
         .img-container { 
             height: 200px; 
             display: flex; 
@@ -49,22 +22,9 @@
             position: relative; 
         }
         
-        .slider-wrapper { 
-            display: flex; 
-            transition: transform 0.4s ease-in-out; 
-            height: 100%; 
-            width: 100%; 
-        }
+        .slider-wrapper { display: flex; transition: transform 0.4s ease-in-out; height: 100%; width: 100%; }
+        .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
         
-        .slider-wrapper img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; 
-            flex-shrink: 0; 
-            padding: 10px; 
-        }
-        
-        /* Etiquetas */
         .etiqueta-destacado {
             position: absolute;
             top: 20px;
@@ -81,43 +41,16 @@
             z-index: 20;
             pointer-events: none;
         }
-
-        .etiqueta-agotado {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: #6c757d;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 5px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            z-index: 25;
-            pointer-events: none;
-        }
         
-        .opacity-50 { opacity: 0.6; filter: grayscale(1); }
-        
-        /* Navegación slider */
-        .nav-btn { 
-            position: absolute; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            background: rgba(0,0,0,0.3); 
-            color: white; 
-            border: none; 
-            padding: 5px 10px; 
-            cursor: pointer; 
-            z-index: 10; 
-            border-radius: 5px; 
-        }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 5px; }
         .prev-btn { left: 5px; }
         .next-btn { right: 5px; }
         
         #filtros-box { display: flex; flex-direction: column; }
+        .hidden-product { display: none !important; }
     </style>
 </head>
-<body>
+<body class="bg-light">
 
 <div class="container py-4">
     <h1 class="text-primary text-center mb-0">Librería Cristiana Logos</h1>
@@ -149,7 +82,6 @@
 <script>
     let productos = [];
     let activos = new Set();
-    
     const filtrosConfig = [
         { etiqueta: "Biblia", campo: "CATEGORIA", grupo: "Producto" },
         { etiqueta: "Devocional", campo: "CATEGORIA", grupo: "Producto" },
@@ -164,13 +96,11 @@
         { etiqueta: "Mensaje", campo: "VERSION", grupo: "Versión" }
     ];
 
-    fetch('productos.json')
-        .then(r => r.json())
-        .then(data => {
-            productos = data;
-            inicializarFiltros();
-            renderizar();
-        });
+    fetch('productos.json').then(r => r.json()).then(data => {
+        productos = data;
+        inicializarFiltros();
+        renderizar();
+    });
 
     function inicializarFiltros() {
         const container = document.getElementById('filtros-box');
@@ -185,13 +115,8 @@
     }
 
     function toggleFiltro(valor, btn) {
-        if (activos.has(valor)) { 
-            activos.delete(valor); 
-            btn.classList.remove('btn-active'); 
-        } else { 
-            activos.add(valor); 
-            btn.classList.add('btn-active'); 
-        }
+        if (activos.has(valor)) { activos.delete(valor); btn.classList.remove('btn-active'); }
+        else { activos.add(valor); btn.classList.add('btn-active'); }
         renderizar();
     }
 
@@ -214,41 +139,29 @@
         
         const filtrados = productos.filter(p => {
             const activasArray = Array.from(activos);
-            
             const cumpleCat = activos.size === 0 || activasArray.every(etiqueta => {
                 const config = filtrosConfig.find(f => f.etiqueta === etiqueta);
                 const valorProducto = String(p[config.campo] || "").trim().toLowerCase();
                 const terminoBusqueda = (config.alias || etiqueta).toLowerCase();
                 return valorProducto.includes(terminoBusqueda);
             });
-            
             const cumpleBusq = busqueda === '' || String(p.PRODUCTO || "").toLowerCase().includes(busqueda) || String(p.DESCRIPCION || "").toLowerCase().includes(busqueda);
             const precioLimpio = parseInt(String(p.PRECIO || "0").replace(/[^0-9]/g, '')) || 0;
             const cumplePrecio = precioLimpio <= maxP;
-            
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
 
-        document.getElementById('grid-productos').innerHTML = filtrados.map(p => {
-            const stock = parseInt(p.STOCK || 0);
-            const estaAgotado = stock <= 0;
-            
-            return `
+        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
             <div class="col" id="col-${String(p.CODIGO).trim()}">
-                <div class="card shadow-sm ${estaAgotado ? 'opacity-50' : ''}">
-                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}">
-                        ${estaAgotado ? '<div class="etiqueta-agotado">Agotado</div>' : ''}
-                    </div>
+                <div class="card h-100 shadow-sm">
+                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">${estaAgotado ? 'Sin existencias' : '$' + parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
-                        <a href="https://wa.me/573125756581?text=${estaAgotado ? 'Hola, me interesa el producto ' + encodeURIComponent(p.PRODUCTO) + ' que aparece agotado, ¿tendrán más pronto?' : 'Hola, me interesa: ' + encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn ${estaAgotado ? 'btn-secondary' : 'btn-success'} btn-sm w-100 mt-2">
-                            ${estaAgotado ? '💬 Consultar disponibilidad' : '💬 Consultar por WhatsApp'}
-                        </a>
+                        <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
+                        <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
                     </div>
                 </div>
-            </div>`;
-        }).join('');
+            </div>`).join('');
         
         filtrados.forEach(p => {
             const valorRaw = String(p.DESTACADO || "").trim().toUpperCase();
@@ -262,62 +175,31 @@
         const container = document.getElementById(`slider-${cleanCodigo}`);
         if (!container) return;
         
-        const variantes = [
-            '0-imagenes/' + cleanCodigo + '.jpg', 
-            '0-imagenes/' + cleanCodigo + '_1.jpg', 
-            '0-imagenes/' + cleanCodigo + '_2.jpg', 
-            '0-imagenes/' + cleanCodigo + '(1).jpg', 
-            '0-imagenes/' + cleanCodigo + '(2).jpg'
-        ];
-        
+        const variantes = [cleanCodigo + '.jpg', cleanCodigo + '_1.jpg', cleanCodigo + '_2.jpg', cleanCodigo + '(1).jpg', cleanCodigo + '(2).jpg'];
         const existentes = [];
-        for (let url of variantes) { 
-            try { 
-                const res = await fetch(url, {method: 'HEAD'}); 
-                if (res.ok) existentes.push(url); 
-            } catch(e) {} 
-        }
+        for (let url of variantes) { try { const res = await fetch(url, {method: 'HEAD'}); if (res.ok) existentes.push(url); } catch(e) {} }
         const unicos = [...new Set(existentes)];
         
-        if (esDestacado) {
-            container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
-        }
-
         if (unicos.length === 0) {
-            container.innerHTML += '<div class="p-3 text-muted small">Sin imagen</div>';
+            const el = document.getElementById(`col-${cleanCodigo}`);
+            if (el) el.classList.add('hidden-product');
         } else {
+            if (esDestacado) {
+                container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
+            }
+
             let currentIndex = 0;
             const wrapper = document.createElement('div');
             wrapper.className = 'slider-wrapper';
-            unicos.forEach(src => { 
-                let img = document.createElement('img'); 
-                img.src = src; 
-                wrapper.appendChild(img); 
-            });
+            unicos.forEach(src => { let img = document.createElement('img'); img.src = src; wrapper.appendChild(img); });
             container.appendChild(wrapper);
 
             if (unicos.length > 1) {
-                const prev = document.createElement('button'); 
-                prev.className = 'nav-btn prev-btn'; 
-                prev.innerHTML = '❮';
-                
-                const next = document.createElement('button'); 
-                next.className = 'nav-btn next-btn'; 
-                next.innerHTML = '❯';
-                
-                container.appendChild(prev); 
-                container.appendChild(next);
-                
-                prev.onclick = (e) => { 
-                    e.preventDefault(); 
-                    currentIndex = (currentIndex - 1 + unicos.length) % unicos.length; 
-                    wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; 
-                };
-                next.onclick = (e) => { 
-                    e.preventDefault(); 
-                    currentIndex = (currentIndex + 1) % unicos.length; 
-                    wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; 
-                };
+                const prev = document.createElement('button'); prev.className = 'nav-btn prev-btn'; prev.innerHTML = '❮';
+                const next = document.createElement('button'); next.className = 'nav-btn next-btn'; next.innerHTML = '❯';
+                container.appendChild(prev); container.appendChild(next);
+                prev.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex - 1 + unicos.length) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
+                next.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex + 1) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
             }
         }
     }

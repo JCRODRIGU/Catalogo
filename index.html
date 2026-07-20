@@ -10,31 +10,14 @@
         .btn-active { background-color: #5588cc !important; color: white !important; }
         .card { border-radius: 15px; transition: 0.3s; height: 100%; }
         .contact-info { font-size: 0.9rem; margin-bottom: 20px; }
-        
-        .img-container { 
-            height: 200px; display: flex; align-items: center; justify-content: center; 
-            background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; 
-        }
-        
+        .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
         .slider-wrapper { display: flex; transition: transform 0.4s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
-        
-        /* Estilo compartido para etiquetas */
-        .etiqueta-destacado, .etiqueta-agotado {
-            position: absolute; top: 20px; right: -30px; width: 140px;
-            text-align: center; font-size: 0.75rem; font-weight: bold; padding: 5px 0;
-            transform: rotate(45deg); box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 20; pointer-events: none;
-        }
+        .etiqueta-destacado, .etiqueta-agotado { position: absolute; top: 20px; right: -30px; width: 140px; text-align: center; font-size: 0.75rem; font-weight: bold; padding: 5px 0; transform: rotate(45deg); box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 20; pointer-events: none; }
         .etiqueta-destacado { background-color: #dc3545; color: white; }
         .etiqueta-agotado { background-color: #6c757d; color: white; }
-
-        .nav-btn { 
-            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; 
-            border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 5px; outline: none;
-        }
-        .prev-btn { left: 5px; }
-        .next-btn { right: 5px; }
-        
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 5px; outline: none; }
+        .prev-btn { left: 5px; } .next-btn { right: 5px; }
         #filtros-box { display: flex; flex-direction: column; }
         .hidden-product { display: none !important; }
     </style>
@@ -137,14 +120,20 @@
                 return valorProducto.includes(terminoBusqueda);
             });
             const cumpleBusq = busqueda === '' || String(p.PRODUCTO || "").toLowerCase().includes(busqueda) || String(p.DESCRIPCION || "").toLowerCase().includes(busqueda);
-            const precioLimpio = parseInt(String(p.PRECIO || "0").replace(/[^0-9]/g, '')) || 0;
-            const cumplePrecio = precioLimpio <= maxP;
+            
+            const precioNumerico = parseFloat(p.PRECIO || 0);
+            const precioFinal = (precioNumerico > 0 && precioNumerico < 1000) ? precioNumerico * 1000 : precioNumerico;
+            
+            const cumplePrecio = precioFinal <= maxP;
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
 
         document.getElementById('grid-productos').innerHTML = filtrados.map(p => {
             const stock = parseInt(p.STOCK || 0);
             const esAgotado = stock <= 0;
+            const precioNumerico = parseFloat(p.PRECIO || 0);
+            const precioFinal = (precioNumerico > 0 && precioNumerico < 1000) ? precioNumerico * 1000 : precioNumerico;
+            
             const linkWp = esAgotado ? 
                 `https://wa.me/573125756581?text=Hola,%20me%20interesa%20que%20me%20avisen%20cuando%20llegue:%20${encodeURIComponent(p.PRODUCTO)}` :
                 `https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}`;
@@ -157,7 +146,7 @@
                     <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">${esAgotado ? 'Agotado' : '$' + parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
+                        <p class="text-primary fw-bold">${esAgotado ? 'Agotado' : '$' + precioFinal.toLocaleString()}</p>
                         <a href="${linkWp}" target="_blank" class="btn ${colorBtn} btn-sm w-100 mt-2">${textoBtn}</a>
                     </div>
                 </div>
@@ -172,6 +161,7 @@
         const container = document.getElementById(`slider-${cleanCodigo}`);
         if (!container) return;
         
+        // Buscamos directamente en la raíz (sin carpeta 0-imagenes)
         const variantes = [cleanCodigo + '.jpg', cleanCodigo + '_1.jpg', cleanCodigo + '_2.jpg', cleanCodigo + '(1).jpg', cleanCodigo + '(2).jpg'];
         const existentes = [];
 

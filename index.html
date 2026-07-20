@@ -42,7 +42,19 @@
             pointer-events: none;
         }
         
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 5px; }
+        .nav-btn { 
+            position: absolute; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            background: rgba(0,0,0,0.3); 
+            color: white; 
+            border: none; 
+            padding: 5px 10px; 
+            cursor: pointer; 
+            z-index: 10; 
+            border-radius: 5px;
+            outline: none;
+        }
         .prev-btn { left: 5px; }
         .next-btn { right: 5px; }
         
@@ -177,7 +189,6 @@
         const variantes = [cleanCodigo + '.jpg', cleanCodigo + '_1.jpg', cleanCodigo + '_2.jpg', cleanCodigo + '(1).jpg', cleanCodigo + '(2).jpg'];
         const existentes = [];
 
-        // Verificación basada en carga real de imagen (más robusta que fetch)
         for (let url of variantes) {
             await new Promise((resolve) => {
                 const img = new Image();
@@ -205,7 +216,7 @@
 
             if (unicos.length > 1) {
                 const prev = document.createElement('button'); prev.className = 'nav-btn prev-btn'; prev.innerHTML = '❮';
-                const next = document.createElement('button'); prev.className = 'nav-btn next-btn'; next.innerHTML = '❯';
+                const next = document.createElement('button'); next.className = 'nav-btn next-btn'; next.innerHTML = '❯';
                 container.appendChild(prev); container.appendChild(next);
                 prev.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex - 1 + unicos.length) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
                 next.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex + 1) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };

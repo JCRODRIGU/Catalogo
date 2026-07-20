@@ -15,7 +15,6 @@
         .slider-wrapper { display: flex; transition: transform 0.4s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
         
-        /* Estilo de la insignia */
         .etiqueta-destacado {
             position: absolute; top: 10px; right: 10px; background-color: #dc3545; color: white;
             padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: bold;
@@ -122,30 +121,29 @@
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
 
-        document.getElementById('grid-productos').innerHTML = filtrados.map(p => {
-            const etiquetaHtml = (String(p.DESTACADO || "").toUpperCase() === "SI") ? '<div class="etiqueta-destacado">Más Vendido</div>' : '';
-            return `
+        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
             <div class="col" id="col-${String(p.CODIGO).trim()}">
                 <div class="card h-100 shadow-sm">
-                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}">
-                        ${etiquetaHtml}
-                    </div>
+                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
                         <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
                         <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
                     </div>
                 </div>
-            </div>`;
-        }).join('');
+            </div>`).join('');
         
-        filtrados.forEach(p => configurarSlider(p.CODIGO));
+        filtrados.forEach(p => {
+            const esDestacado = String(p.DESTACADO || "").trim().toUpperCase().includes("SI");
+            configurarSlider(p.CODIGO, esDestacado);
+        });
     }
 
-    async function configurarSlider(codigo) {
+    async function configurarSlider(codigo, esDestacado) {
         const cleanCodigo = String(codigo).trim();
         const container = document.getElementById(`slider-${cleanCodigo}`);
         if (!container) return;
+        
         const variantes = [cleanCodigo + '.jpg', cleanCodigo + '_1.jpg', cleanCodigo + '_2.jpg', cleanCodigo + '(1).jpg', cleanCodigo + '(2).jpg'];
         const existentes = [];
         for (let url of variantes) { try { const res = await fetch(url, {method: 'HEAD'}); if (res.ok) existentes.push(url); } catch(e) {} }
@@ -155,6 +153,11 @@
             const el = document.getElementById(`col-${cleanCodigo}`);
             if (el) el.classList.add('hidden-product');
         } else {
+            // Inyectamos la etiqueta aquí si es destacado
+            if (esDestacado) {
+                container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
+            }
+
             let currentIndex = 0;
             const wrapper = document.createElement('div');
             wrapper.className = 'slider-wrapper';

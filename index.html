@@ -12,29 +12,21 @@
         .contact-info { font-size: 0.9rem; margin-bottom: 20px; }
         
         .img-container { 
-            height: 200px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #f8f9fa; 
-            border-radius: 15px 15px 0 0; 
-            overflow: hidden; 
-            position: relative; 
+            height: 200px; display: flex; align-items: center; justify-content: center; 
+            background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; 
         }
         
         .slider-wrapper { display: flex; transition: transform 0.4s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
         
-        .etiqueta-destacado {
-            position: absolute; top: 20px; right: -30px; width: 140px; background-color: #dc3545; color: white;
+        /* Estilo compartido para etiquetas */
+        .etiqueta-destacado, .etiqueta-agotado {
+            position: absolute; top: 20px; right: -30px; width: 140px;
             text-align: center; font-size: 0.75rem; font-weight: bold; padding: 5px 0;
             transform: rotate(45deg); box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 20; pointer-events: none;
         }
-        
-        .etiqueta-agotado {
-            position: absolute; top: 10px; left: 10px; background-color: #6c757d; color: white;
-            padding: 4px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; z-index: 20;
-        }
+        .etiqueta-destacado { background-color: #dc3545; color: white; }
+        .etiqueta-agotado { background-color: #6c757d; color: white; }
 
         .nav-btn { 
             position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; 
@@ -45,7 +37,6 @@
         
         #filtros-box { display: flex; flex-direction: column; }
         .hidden-product { display: none !important; }
-        .card-agotado { opacity: 0.6; filter: grayscale(1); }
     </style>
 </head>
 <body class="bg-light">
@@ -53,9 +44,7 @@
 <div class="container py-4">
     <h1 class="text-primary text-center mb-0">Librería Cristiana Logos</h1>
     <div class="text-center contact-info">
-        <p class="mb-1">
-            📍 <a href="https://maps.app.goo.gl/4eKMiWTLzSn7yvYBA" target="_blank" class="text-decoration-none">Calle 35C Sur No 78A-18, Kennedy Central, Bogotá</a>
-        </p>
+        <p class="mb-1">📍 <a href="https://maps.app.goo.gl/4eKMiWTLzSn7yvYBA" target="_blank" class="text-decoration-none">Calle 35C Sur No 78A-18, Kennedy Central, Bogotá</a></p>
         <p>📱 <a href="https://wa.me/573125756581" target="_blank" class="text-decoration-none">312-5756581</a></p>
     </div>
     
@@ -95,7 +84,6 @@
     ];
 
     fetch('productos.json').then(r => r.json()).then(data => {
-        // DEDUPLICACIÓN: Solo el primero por código
         const mapaUnicos = new Map();
         data.forEach(p => {
             const cod = String(p.CODIGO || "").trim();
@@ -154,17 +142,27 @@
             return cumpleCat && cumpleBusq && cumplePrecio;
         });
 
-        document.getElementById('grid-productos').innerHTML = filtrados.map(p => `
+        document.getElementById('grid-productos').innerHTML = filtrados.map(p => {
+            const stock = parseInt(p.STOCK || 0);
+            const esAgotado = stock <= 0;
+            const linkWp = esAgotado ? 
+                `https://wa.me/573125756581?text=Hola,%20me%20interesa%20que%20me%20avisen%20cuando%20llegue:%20${encodeURIComponent(p.PRODUCTO)}` :
+                `https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}`;
+            const textoBtn = esAgotado ? "🔔 Avisarme" : "💬 Consultar";
+            const colorBtn = esAgotado ? "btn-secondary" : "btn-success";
+
+            return `
             <div class="col" id="col-${String(p.CODIGO).trim()}">
                 <div class="card shadow-sm" id="card-${String(p.CODIGO).trim()}">
                     <div class="img-container" id="slider-${String(p.CODIGO).trim()}"></div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
-                        <p class="text-primary fw-bold">$${parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
-                        <a href="https://wa.me/573125756581?text=Hola,%20me%20interesa:%20${encodeURIComponent(p.PRODUCTO)}" target="_blank" class="btn btn-success btn-sm w-100 mt-2">💬 Consultar por WhatsApp</a>
+                        <p class="text-primary fw-bold">${esAgotado ? 'Agotado' : '$' + parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
+                        <a href="${linkWp}" target="_blank" class="btn ${colorBtn} btn-sm w-100 mt-2">${textoBtn}</a>
                     </div>
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
         
         filtrados.forEach(p => configurarSlider(p));
     }
@@ -172,7 +170,6 @@
     async function configurarSlider(p) {
         const cleanCodigo = String(p.CODIGO).trim();
         const container = document.getElementById(`slider-${cleanCodigo}`);
-        const card = document.getElementById(`card-${cleanCodigo}`);
         if (!container) return;
         
         const variantes = [cleanCodigo + '.jpg', cleanCodigo + '_1.jpg', cleanCodigo + '_2.jpg', cleanCodigo + '(1).jpg', cleanCodigo + '(2).jpg'];
@@ -187,23 +184,19 @@
             });
         }
         
-        // REGLA: Nunca mostrar si no tiene imagen
         if (existentes.length === 0) {
             document.getElementById(`col-${cleanCodigo}`).classList.add('hidden-product');
             return;
         }
 
-        // REGLA: Etiqueta Agotado si stock <= 0
         const stock = parseInt(p.STOCK || 0);
         if (stock <= 0) {
             container.insertAdjacentHTML('beforeend', '<div class="etiqueta-agotado">Agotado</div>');
-            card.classList.add('card-agotado');
-        }
-
-        // Lógica del Slider
-        const valorRaw = String(p.DESTACADO || "").trim().toUpperCase();
-        if (valorRaw === "SI" || valorRaw === "S" || valorRaw === "TRUE" || valorRaw === "1") {
-            container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
+        } else {
+            const valorRaw = String(p.DESTACADO || "").trim().toUpperCase();
+            if (valorRaw === "SI" || valorRaw === "S" || valorRaw === "TRUE" || valorRaw === "1") {
+                container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
+            }
         }
 
         let currentIndex = 0;

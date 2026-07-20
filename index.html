@@ -64,7 +64,6 @@
         .next-btn { right: 5px; }
         
         #filtros-box { display: flex; flex-direction: column; }
-        .hidden-product { display: none !important; }
     </style>
 </head>
 <body class="bg-light">
@@ -99,6 +98,7 @@
 <script>
     let productos = [];
     let activos = new Set();
+    let productosConImagen = [];
     const filtrosConfig = [
         { etiqueta: "Biblia", campo: "CATEGORIA", grupo: "Producto" },
         { etiqueta: "Devocional", campo: "CATEGORIA", grupo: "Producto" },
@@ -113,16 +113,26 @@
         { etiqueta: "Mensaje", campo: "VERSION", grupo: "Versión" }
     ];
 
-    fetch('productos.json').then(r => r.json()).then(data => {
+    fetch('productos.json').then(r => r.json()).then(async data => {
         productos = data;
+        // Precarga de imágenes para filtrar productos sin fotos
+        for (let p of productos) {
+            if (await tieneImagen(p.CODIGO)) productosConImagen.push(p);
+        }
         inicializarFiltros();
         renderizar();
     });
 
+    async function tieneImagen(codigo) {
+        const c = String(codigo).trim();
+        const variantes = [c + '.jpg', c + '_1.jpg', c + '_2.jpg', c + '(1).jpg', c + '(2).jpg'];
+        for (let v of variantes) { try { const res = await fetch(v, {method: 'HEAD'}); if (res.ok) return true; } catch(e) {} }
+        return false;
+    }
+
     function inicializarFiltros() {
         const container = document.getElementById('filtros-box');
         const grupos = [...new Set(filtrosConfig.map(f => f.grupo))];
-        
         container.innerHTML = grupos.map(g => `
             <h6 class="mt-3 mb-1 text-muted small fw-bold">${g}</h6>
             ${filtrosConfig.filter(f => f.grupo === g).map(f => 
@@ -154,30 +164,24 @@
         const busqueda = document.getElementById('buscador').value.toLowerCase();
         const maxP = parseInt(document.getElementById('precio-slider').value);
         
-        const filtrados = productos.filter(p => {
+        const filtrados = productosConImagen.filter(p => {
             const activasArray = Array.from(activos);
             const cumpleCat = activos.size === 0 || activasArray.every(etiqueta => {
                 const config = filtrosConfig.find(f => f.etiqueta === etiqueta);
-                const valorProducto = String(p[config.campo] || "").trim().toLowerCase();
-                const terminoBusqueda = (config.alias || etiqueta).toLowerCase();
-                return valorProducto.includes(terminoBusqueda);
+                return String(p[config.campo] || "").trim().toLowerCase().includes((config.alias || etiqueta).toLowerCase());
             });
             const cumpleBusq = busqueda === '' || String(p.PRODUCTO || "").toLowerCase().includes(busqueda) || String(p.DESCRIPCION || "").toLowerCase().includes(busqueda);
             const precioLimpio = parseInt(String(p.PRECIO || "0").replace(/[^0-9]/g, '')) || 0;
-            const cumplePrecio = precioLimpio <= maxP;
-            return cumpleCat && cumpleBusq && cumplePrecio;
+            return cumpleCat && cumpleBusq && precioLimpio <= maxP;
         });
 
         document.getElementById('grid-productos').innerHTML = filtrados.map(p => {
             const stock = parseInt(p.STOCK || 0);
             const estaAgotado = stock <= 0;
-            
             return `
-            <div class="col" id="col-${String(p.CODIGO).trim()}">
+            <div class="col">
                 <div class="card h-100 shadow-sm ${estaAgotado ? 'opacity-50' : ''}">
-                    <div class="img-container" id="slider-${String(p.CODIGO).trim()}">
-                        ${estaAgotado ? '<div class="etiqueta-agotado">Agotado</div>' : ''}
-                    </div>
+                    <div class="img-container" id="slider-${p.CODIGO}">${estaAgotado ? '<div class="etiqueta-agotado">Agotado</div>' : ''}</div>
                     <div class="card-body text-center d-flex flex-column">
                         <h6 class="card-title flex-grow-1">${p.PRODUCTO}</h6>
                         <p class="text-primary fw-bold">${estaAgotado ? 'Sin existencias' : '$' + parseInt(String(p.PRECIO).replace(/[^0-9]/g, '') || 0).toLocaleString()}</p>
@@ -189,44 +193,28 @@
             </div>`;
         }).join('');
         
-        filtrados.forEach(p => {
-            const valorRaw = String(p.DESTACADO || "").trim().toUpperCase();
-            const esDestacado = (valorRaw === "SI" || valorRaw === "S" || valorRaw === "TRUE" || valorRaw === "1");
-            configurarSlider(p.CODIGO, esDestacado);
-        });
+        filtrados.forEach(p => configurarSlider(p.CODIGO, String(p.DESTACADO || "").toUpperCase() === "SI"));
     }
 
     async function configurarSlider(codigo, esDestacado) {
-        const cleanCodigo = String(codigo).trim();
-        const container = document.getElementById(`slider-${cleanCodigo}`);
+        const container = document.getElementById(`slider-${codigo}`);
         if (!container) return;
-        
-        const variantes = [cleanCodigo + '.jpg', cleanCodigo + '_1.jpg', cleanCodigo + '_2.jpg', cleanCodigo + '(1).jpg', cleanCodigo + '(2).jpg'];
+        const variantes = [codigo + '.jpg', codigo + '_1.jpg', codigo + '_2.jpg', codigo + '(1).jpg', codigo + '(2).jpg'];
         const existentes = [];
         for (let url of variantes) { try { const res = await fetch(url, {method: 'HEAD'}); if (res.ok) existentes.push(url); } catch(e) {} }
         const unicos = [...new Set(existentes)];
         
-        if (unicos.length === 0) {
-            const el = document.getElementById(`col-${cleanCodigo}`);
-            if (el) el.classList.add('hidden-product');
-        } else {
-            if (esDestacado) {
-                container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
-            }
-
-            let currentIndex = 0;
-            const wrapper = document.createElement('div');
-            wrapper.className = 'slider-wrapper';
-            unicos.forEach(src => { let img = document.createElement('img'); img.src = src; wrapper.appendChild(img); });
-            container.appendChild(wrapper);
-
-            if (unicos.length > 1) {
-                const prev = document.createElement('button'); prev.className = 'nav-btn prev-btn'; prev.innerHTML = '❮';
-                const next = document.createElement('button'); next.className = 'nav-btn next-btn'; next.innerHTML = '❯';
-                container.appendChild(prev); container.appendChild(next);
-                prev.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex - 1 + unicos.length) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
-                next.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex + 1) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
-            }
+        if (esDestacado) container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
+        let currentIndex = 0;
+        const wrapper = document.createElement('div'); wrapper.className = 'slider-wrapper';
+        unicos.forEach(src => { let img = document.createElement('img'); img.src = src; wrapper.appendChild(img); });
+        container.appendChild(wrapper);
+        if (unicos.length > 1) {
+            const prev = document.createElement('button'); prev.className = 'nav-btn prev-btn'; prev.innerHTML = '❮';
+            const next = document.createElement('button'); next.className = 'nav-btn next-btn'; next.innerHTML = '❯';
+            container.appendChild(prev); container.appendChild(next);
+            prev.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex - 1 + unicos.length) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
+            next.onclick = (e) => { e.preventDefault(); currentIndex = (currentIndex + 1) % unicos.length; wrapper.style.transform = `translateX(-${currentIndex * 100}%)`; };
         }
     }
 </script>

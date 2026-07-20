@@ -11,14 +11,36 @@
         .card { border-radius: 15px; transition: 0.3s; }
         .contact-info { font-size: 0.9rem; margin-bottom: 20px; }
         
-        .img-container { height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 15px 15px 0 0; overflow: hidden; position: relative; }
+        .img-container { 
+            height: 200px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #f8f9fa; 
+            border-radius: 15px 15px 0 0; 
+            overflow: hidden; /* Necesario para cortar la etiqueta diagonal */
+            position: relative; 
+        }
+        
         .slider-wrapper { display: flex; transition: transform 0.4s ease-in-out; height: 100%; width: 100%; }
         .slider-wrapper img { width: 100%; height: 100%; object-fit: contain; flex-shrink: 0; padding: 10px; }
         
+        /* Estilo de la etiqueta tipo cinta diagonal */
         .etiqueta-destacado {
-            position: absolute; top: 10px; right: 10px; background-color: #dc3545; color: white;
-            padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: bold;
-            z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            width: 140px;
+            background-color: #dc3545;
+            color: white;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 5px 0;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 20;
+            pointer-events: none;
         }
         
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 5px; }
@@ -75,7 +97,6 @@
 
     fetch('productos.json').then(r => r.json()).then(data => {
         productos = data;
-        console.log("Datos cargados:", productos[0]); // Debug inicial
         inicializarFiltros();
         renderizar();
     });
@@ -135,12 +156,8 @@
             </div>`).join('');
         
         filtrados.forEach(p => {
-            // Lógica de detección ultra-robusta
             const valorRaw = String(p.DESTACADO || "").trim().toUpperCase();
             const esDestacado = (valorRaw === "SI" || valorRaw === "S" || valorRaw === "TRUE" || valorRaw === "1");
-            
-            if (esDestacado) console.log("Producto marcado como destacado:", p.PRODUCTO);
-            
             configurarSlider(p.CODIGO, esDestacado);
         });
     }
@@ -159,7 +176,6 @@
             const el = document.getElementById(`col-${cleanCodigo}`);
             if (el) el.classList.add('hidden-product');
         } else {
-            // Se inyecta la etiqueta solo si es destacado
             if (esDestacado) {
                 container.insertAdjacentHTML('beforeend', '<div class="etiqueta-destacado">Más Vendido</div>');
             }
